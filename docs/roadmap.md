@@ -9,12 +9,13 @@ commit (conventional prefix, subject ≤ 50 chars, body wrapped at 72).
 |---|----------------|----------|
 | M0 | `docs: add assignment spec, PRD, and roadmap` | Repo init, spec/PRD/roadmap docs, CLAUDE.md commit rules, .gitignore |
 | M1 | `chore: scaffold Next.js app with TypeScript` | Runnable empty app (`npm run dev`) |
-| M2 | `feat: add SQLite persistence and forms API` | `db.ts`, forms + submissions tables, forms API routes |
-| M3 | `feat: add dashboard with submissions view` | `/` create + list forms, `/forms/[id]` submissions |
-| M4 | `feat: add respondent fill route and submit` | `/fill/[id]` traditional form controls, submission POST |
-| M5 | `feat: add AI chat assistant fill mode` | Chat UI + `/api/forms/[id]/chat`, all six AI behaviors |
-| M6 | `feat: add document upload with AI extraction` | Upload control + `/api/forms/[id]/extract` |
-| M7 | `docs: add README with setup instructions` | README, `.env.example`, CLAUDE.md run/build commands |
+| M2 | `feat: add SQLite persistence and forms API` | `db.ts` with seeded sample form, forms + submissions tables, create/submit routes with validation, `node --test` validation test |
+| M3 | `feat: add dashboard with submissions view` | `/` row-based builder + list forms, `/forms/[id]` submissions |
+| M4 | `feat: add respondent fill route and submit` | `/fill/[id]` traditional form controls, shared answers state, submission POST |
+| M5 | `feat: add AI chat assistant fill mode` | Chat UI + `/api/forms/[id]/chat`, all six AI behaviors, `.env.example` |
+| M6 | `feat: add document upload with AI extraction` | Upload control + `/api/forms/[id]/extract`, `fixtures/sample-document.txt` + PDF twin, AI smoke script |
+| M7 | `feat: add AI form generation to dashboard` | "Describe your form" box + `/api/forms/generate`, prefills builder rows |
+| M8 | `docs: add README with setup instructions` | README, CLAUDE.md run/build commands |
 
 ## Functionality, prioritization, engineering decisions
 
@@ -39,11 +40,30 @@ commit (conventional prefix, subject ≤ 50 chars, body wrapped at 72).
   code-computed missing-field lists injected each turn, submission-boundary
   validation, JSON-mode output validated with one retry (see PRD
   "Accuracy").
+- **Shared answers state on the fill page.** Form tab, chat tab, and the
+  document upload all read/write one `answers` object, so respondents can
+  mix modes freely and nothing is lost switching — one React state object,
+  zero extra cost, strongest demo moment.
+- **The AI never submits.** `ready_to_submit` only makes the client render
+  a summary and a real Submit button; both modes post through the same
+  validated submissions endpoint.
+- **Graceful degradation.** No API key / API outage → chat, extract, and
+  generate return clear errors; the dashboard and traditional mode never
+  touch the AI, so the non-AI half of the spec always works.
+- **Reads via server components, writes via API routes.** Pages query
+  SQLite directly; only browser-time calls (create, generate, submit, chat,
+  extract) get endpoints. Fewer files, no client fetch for static reads.
+- **Fixtures double as test data.** The seeded form and sample document are
+  both the instant demo and the ground truth the validation tests and AI
+  smoke script assert against.
+- **Thinking mode off** for DeepSeek calls — per-turn latency for no
+  accuracy gain at this schema size (easyagent enables it; this app does
+  not).
 - **Deliberately skipped** (and when to add): form edit/delete (add when the
   dashboard is more than a demo), streaming chat responses (add if turn
   latency annoys), image-document upload (add by swapping in a
-  vision-capable model), tests beyond a couple of endpoint smoke checks (add
-  with the first regression).
+  vision-capable model), tests beyond the validation unit test and AI smoke
+  script (add with the first regression).
 
 ## Tooling justifications
 
@@ -90,3 +110,19 @@ project, from start to finish.
    submission-boundary validation, JSON-mode structured output with
    validation + one retry, low temperature for extraction. Storage stays
    better-sqlite3.
+7. **2026-07-18 — Design-review prompt.** User asked what other aspects of
+   the design should be questioned before coding. Technical defaults
+   chosen: shared answers state across fill modes; AI never auto-submits
+   (client Submit button through the validated endpoint); graceful
+   degradation when the AI is unavailable; DeepSeek thinking mode off;
+   ~5 MB upload cap with truncation and a scanned-PDF "couldn't read"
+   message; reads via server components with only five POST endpoints;
+   better-sqlite3 `serverExternalPackages` + node-runtime gotchas recorded;
+   `crypto.randomUUID()` ids; `.env.example` moved to M5.
+8. **2026-07-18 — Design-review Q&A choices.** Builder UX: row-based
+   builder **plus** AI generation from a description (`/api/forms/generate`
+   prefills the builder rows for review before saving) — added as M7.
+   Fixtures: yes, and they double as test data — seeded "Event Booking
+   Request" form and a sample document that answers most-but-not-all
+   questions, asserted against by the validation tests and an on-demand AI
+   smoke script.

@@ -55,19 +55,36 @@ Question shape:
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Dashboard: create-form UI + list of forms with share links |
+| `/` | Dashboard: form builder + list of forms with share links |
 | `/forms/[id]` | Submissions for one form |
 | `/fill/[id]` | Respondent page: toggle between form controls and AI chat |
 
+The builder is row-based — each row has a label, type dropdown, options field
+(for choice types), and required checkbox — plus a "describe your form" box
+where the AI drafts a title and questions that **prefill the builder rows**
+for review and editing before saving through the normal create path. The fill
+page holds one shared `answers` object; the form tab and chat tab are two
+views of it, and the document-upload control sits outside both tabs and
+merges into it — switching modes never loses data.
+
 ## API
+
+Reads (dashboard, submissions view, fill-page form load) are Next.js server
+components querying SQLite directly — no GET endpoints. API routes exist only
+where the browser calls at runtime:
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET/POST /api/forms` | List / create forms |
-| `GET /api/forms/[id]` | Fetch one form (used by fill page) |
-| `GET/POST /api/forms/[id]/submissions` | List / create submissions |
+| `POST /api/forms` | Create a form |
+| `POST /api/forms/generate` | AI drafts `{title, questions}` from a description |
+| `POST /api/forms/[id]/submissions` | Submit answers (validated, both modes) |
 | `POST /api/forms/[id]/chat` | AI assistant turn |
 | `POST /api/forms/[id]/extract` | Document upload → derived answers |
+
+Implementation notes: `serverExternalPackages: ['better-sqlite3']` in
+`next.config.ts`, node runtime only (never edge), Next 15 `params` are
+async. IDs via `crypto.randomUUID()`; question ids `q1..qn`. Multiple
+submissions per form are allowed (no auth per spec).
 
 ## AI design
 
@@ -95,7 +112,27 @@ pre-fills answers in either mode and the chat reports what is still missing.
 
 Model: **DeepSeek V4 Flash** (`deepseek-v4-flash`) via the OpenAI-compatible
 API (`https://api.deepseek.com`, `DEEPSEEK_API_KEY`), called with the `openai`
-npm SDK using a custom `baseURL`.
+npm SDK using a custom `baseURL`. Thinking mode stays **off** (easyagent
+enables it; here it only adds per-turn latency at this schema size).
+
+### Form generation
+
+`POST /api/forms/generate` takes `{description}` and returns
+`{title, questions}` in the standard question shape. The result prefills the
+builder rows — the creator reviews and edits before saving, so there is one
+create pipeline and a human stays in the loop.
+
+### Interaction rules
+
+- **The AI never submits.** When `ready_to_submit` is true the client
+  renders the summary plus a real Submit button, which posts through the
+  same validated submissions endpoint as the form tab.
+- **Graceful degradation.** If `DEEPSEEK_API_KEY` is missing or the API is
+  down, chat/extract/generate return a clear error message; the dashboard
+  and traditional fill mode never touch the AI and keep working.
+- **Upload guards.** Uploads capped at ~5 MB; extracted text truncated to
+  fit context; if extraction yields empty text (scanned/image-only PDF) the
+  respondent is told the document couldn't be read.
 
 ### Accuracy
 
@@ -122,6 +159,26 @@ npm SDK using a custom `baseURL`.
   choices drop back to "missing" rather than being stored wrong.
 - **Low temperature** for document extraction — extraction wants
   determinism, not creativity.
+
+## Fixtures & testing
+
+Demo fixtures double as test data:
+
+- **Seeded form** — on first run (empty `forms` table), `db.ts` inserts an
+  "Event Booking Request" form: name (text, required), event date (text,
+  required), guest count (text, required), meal preference (dropdown,
+  required), special requests (textarea, optional), how did you hear about
+  us (multiple choice, optional).
+- **Sample document** — `fixtures/sample-document.txt`, an email-style
+  letter answering name/date/guests/meal but **not** special requests, so
+  extraction provably reports missing information. A small PDF twin
+  (generated locally) exercises the unpdf path.
+- **Tests** — deterministic logic (submission validation, schema checks)
+  uses Node's built-in `node --test`, zero extra dependencies. One
+  on-demand AI smoke script (npm script; needs the API key, costs tokens)
+  runs the seeded form + sample document through extract and chat and
+  asserts answers are non-empty, valid against options, and that `missing`
+  names the special-requests question.
 
 ## Tech stack
 
