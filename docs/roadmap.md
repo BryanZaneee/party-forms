@@ -29,6 +29,16 @@ commit (conventional prefix, subject ≤ 50 chars, body wrapped at 72).
 - **JSON columns over normalized answer rows.** Questions and answers are
   read and written as whole documents; nothing queries individual answers.
   Normalization would add joins for zero features at this scope.
+- **No RAG/embeddings.** Form schemas and uploaded documents fit whole in
+  the model's context window, so every AI call stuffs the full schema (and
+  full document text) into context — the model sees 100% of the evidence.
+  Retrieval would add a top-k miss risk and vector-store infrastructure for
+  negative accuracy gain. Revisit only for a multi-document corpus or
+  documents larger than the context window, and then via chunked multi-pass
+  extraction merged in code. Accuracy comes from determinism instead:
+  code-computed missing-field lists injected each turn, submission-boundary
+  validation, JSON-mode output validated with one retry (see PRD
+  "Accuracy").
 - **Deliberately skipped** (and when to add): form edit/delete (add when the
   dashboard is more than a demo), streaming chat responses (add if turn
   latency annoys), image-document upload (add by swapping in a
@@ -71,3 +81,12 @@ project, from start to finish.
    diff, no speculative abstraction.
 5. **2026-07-18 — M0 executed.** Repo initialized, docs written, commit rules
    added to CLAUDE.md.
+6. **2026-07-18 — Accuracy prompt.** User asked how to best store forms,
+   guarantee complete submissions, and maximize document-extraction and
+   AI-agent accuracy — and whether RAG/embeddings would help. Decision: no
+   RAG/embeddings (everything fits in context; retrieval only adds a miss
+   risk and infra). Accuracy via determinism: full-context stuffing,
+   code-computed missing-field tracking injected each turn,
+   submission-boundary validation, JSON-mode structured output with
+   validation + one retry, low temperature for extraction. Storage stays
+   better-sqlite3.

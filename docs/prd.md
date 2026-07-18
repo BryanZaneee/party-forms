@@ -97,6 +97,32 @@ Model: **DeepSeek V4 Flash** (`deepseek-v4-flash`) via the OpenAI-compatible
 API (`https://api.deepseek.com`, `DEEPSEEK_API_KEY`), called with the `openai`
 npm SDK using a custom `baseURL`.
 
+### Accuracy
+
+- **Full-context stuffing, no RAG/embeddings.** Every AI call includes the
+  complete form schema and (for extraction) the complete document text. Form
+  schemas are a few hundred tokens and uploaded documents fit whole in the
+  model's context window, so the model always sees 100% of the evidence;
+  retrieval would add a top-k miss risk plus vector-store infra for negative
+  gain. Revisit only if documents exceed the context window — and then via
+  chunked multi-pass extraction merged in code, still not embeddings.
+- **Deterministic completeness tracking.** Each chat turn the server computes
+  `missing = required - answered` in code and injects it into the system
+  prompt. The model is never trusted to remember state — its context is
+  rebuilt from ground truth every turn, so it cannot drift.
+- **Submission-boundary validation.** `POST /api/forms/[id]/submissions`
+  rejects (400, listing the offending fields) any submission missing a
+  required answer or containing a choice answer outside the question's
+  options. Both fill modes pass through it, so incomplete or invalid
+  submissions cannot be stored regardless of what the AI said.
+- **Structured output with retry.** Chat and extraction use DeepSeek JSON
+  mode (`response_format: {type: "json_object"}`). The server parses,
+  validates the shape, and checks choice answers against allowed options;
+  on failure it retries once with the error appended. Invalid extracted
+  choices drop back to "missing" rather than being stored wrong.
+- **Low temperature** for document extraction — extraction wants
+  determinism, not creativity.
+
 ## Tech stack
 
 - **Next.js (App Router) + TypeScript** — one app serves UI and API.
