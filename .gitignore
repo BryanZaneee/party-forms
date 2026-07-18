@@ -41,6 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 # app data + local env
-data.db
+data.db*
 !.env.example
 .DS_Store
