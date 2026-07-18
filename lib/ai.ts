@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import type { Answers, Form, Question } from "./types.ts";
-import { validateAnswers } from "./validate.ts";
+import { normalizeQuestions, validateAnswers } from "./validate.ts";
 
 const MODEL = "deepseek-v4-flash";
 
@@ -156,4 +156,30 @@ Respond with ONLY JSON: {"answers": {question id: answer string, for every quest
 
   const missing = form.questions.filter((q) => !answers[q.id]?.trim()).map((q) => q.id);
   return { answers, missing };
+}
+
+/** Draft a form from a creator's description; result prefills the builder for review. */
+export async function generateForm(description: string): Promise<{ title: string; questions: Question[] }> {
+  const system = `You design forms. From the user's description, produce a concise form.
+
+Question types: text (short answer), textarea (long answer), multiple_choice, dropdown.
+multiple_choice and dropdown questions need an "options" array of 2-6 strings.
+Mark a question "required" only when the form clearly needs it.
+
+Respond with ONLY JSON:
+{"title": string, "questions": [{"label": string, "type": string, "options"?: string[], "required": boolean}]}`;
+
+  return jsonCall(
+    [
+      { role: "system", content: system },
+      { role: "user", content: description },
+    ],
+    0,
+    (parsed) => {
+      const p = parsed as { title?: unknown; questions?: unknown };
+      if (typeof p?.title !== "string" || !p.title.trim()) return null;
+      const questions = normalizeQuestions(p.questions);
+      return questions && { title: p.title.trim(), questions };
+    }
+  );
 }
