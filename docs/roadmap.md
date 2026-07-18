@@ -126,3 +126,12 @@ project, from start to finish.
    Request" form and a sample document that answers most-but-not-all
    questions, asserted against by the validation tests and an on-demand AI
    smoke script.
+9. **2026-07-18 — Backend/UI split prompt.** UI is being built separately
+   with Claude Design; this repo's backend proceeds now on main (scaffold
+   first). Ownership boundary: backend owns `package.json` deps,
+   `next.config.ts`, `lib/`, `app/api/`, `fixtures/`, `scripts/`, `tests/`,
+   `.env.example`, and docs; UI owns `app/` pages, components, and styling.
+   The interface contract is `lib/types.ts`, the `lib/db.ts` function
+   signatures, and the five POST endpoints in the PRD — UI server
+   components read via `lib/db`, client components call only the POST
+   routes.
