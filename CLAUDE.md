@@ -37,6 +37,9 @@ tooling rationale, and the append-only decision/prompt log: `docs/roadmap.md`.
 - `npm run dev` — dev server (Turbopack) at http://localhost:3000
 - `npm run build` / `npm start` — production build and serve
 - `npm run lint` — ESLint
+- `npm test` — deterministic unit tests (validation), no AI calls
+- `npm run test:ai` — AI smoke test against the seeded fixtures (needs
+  `DEEPSEEK_API_KEY` in `.env.local`, costs tokens)
 - Every prompt-level request or decision gets appended to the Decision &
   Prompt Log in `docs/roadmap.md`, in chronological order.
 

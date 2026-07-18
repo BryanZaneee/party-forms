@@ -135,3 +135,14 @@ project, from start to finish.
    signatures, and the five POST endpoints in the PRD — UI server
    components read via `lib/db`, client components call only the POST
    routes.
+10. **2026-07-18 — Backend built and verified.** Commits da3eaa4..be6e0b4:
+    scaffold (Next.js 16, Turbopack), SQLite layer with seeded fixture
+    form, validation module, DeepSeek client (JSON mode + one retry), and
+    all five POST endpoints. Verified live: chat extracted four answers
+    from one natural sentence, mapped wording to exact options, applied
+    answer changes, and gated ready_to_submit on confirmation; extraction
+    from the fixture PDF returned five answers with special requests
+    reported missing; generation produced a valid five-question RSVP form;
+    submissions survive a server restart. `npm test` 6/6, `npm run
+    test:ai` green, production build clean. UI pages remain (Claude
+    Design).
