@@ -124,3 +124,36 @@ Respond with ONLY JSON:
   const after = validateAnswers(form.questions, answers);
   return { reply: result.reply, answers, ready_to_submit: result.ready && after.missing.length === 0 };
 }
+
+/**
+ * Derive answers from document text. `missing` lists every question
+ * (required or optional) the document did not answer.
+ */
+export async function extractAnswers(form: Form, text: string): Promise<{ answers: Answers; missing: string[] }> {
+  const system = `You extract form answers from a document. The form is "${form.title}".
+
+Questions:
+${schemaText(form.questions)}
+
+Rules:
+- Only include an answer when the document actually supports it; never guess.
+- For multiple_choice/dropdown questions the answer must be EXACTLY one of the listed options.
+
+Respond with ONLY JSON: {"answers": {question id: answer string, for every question the document answers}}`;
+
+  const answers = await jsonCall(
+    [
+      { role: "system", content: system },
+      { role: "user", content: `Document:\n${text}` },
+    ],
+    0,
+    (parsed) => {
+      const p = parsed as { answers?: unknown };
+      if (!p || typeof p !== "object" || !("answers" in p)) return null;
+      return cleanAnswers(form.questions, p.answers);
+    }
+  );
+
+  const missing = form.questions.filter((q) => !answers[q.id]?.trim()).map((q) => q.id);
+  return { answers, missing };
+}
