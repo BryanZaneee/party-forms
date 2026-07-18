@@ -25,12 +25,18 @@ tooling rationale, and the append-only decision/prompt log: `docs/roadmap.md`.
 
 ## Current state
 
-- Repo initialized; docs complete (M0 in `docs/roadmap.md`). No application
-  code yet — the build starts at M1.
-- Stack (decided): Next.js (App Router) + TypeScript, better-sqlite3 for
-  persistence, DeepSeek V4 Flash (`deepseek-v4-flash`, OpenAI-compatible API,
-  `DEEPSEEK_API_KEY`) for the AI assistant and document extraction.
-- Once the app is scaffolded, update this file with build/run/test commands.
+- Next.js 16 (App Router) + TypeScript scaffolded; backend being built here
+  while the UI is designed separately (see decision log entry 9 in
+  `docs/roadmap.md` for the ownership boundary).
+- Stack: better-sqlite3 for persistence (`data.db`, gitignored), DeepSeek V4
+  Flash (`deepseek-v4-flash`, OpenAI-compatible API, `DEEPSEEK_API_KEY` in
+  `.env.local`) for the AI assistant and document extraction.
+
+## Commands
+
+- `npm run dev` — dev server (Turbopack) at http://localhost:3000
+- `npm run build` / `npm start` — production build and serve
+- `npm run lint` — ESLint
 - Every prompt-level request or decision gets appended to the Decision &
   Prompt Log in `docs/roadmap.md`, in chronological order.
 
