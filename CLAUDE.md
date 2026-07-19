@@ -25,12 +25,18 @@ tooling rationale, and the append-only decision/prompt log: `docs/roadmap.md`.
 
 ## Current state
 
-- Next.js 16 (App Router) + TypeScript scaffolded; backend being built here
-  while the UI is designed separately (see decision log entry 9 in
-  `docs/roadmap.md` for the ownership boundary).
-- Stack: better-sqlite3 for persistence (`data.db`, gitignored), DeepSeek V4
-  Flash (`deepseek-v4-flash`, OpenAI-compatible API, `DEEPSEEK_API_KEY` in
-  `.env.local`) for the AI assistant and document extraction.
+- Complete: backend (5 POST endpoints + DELETE, SQLite via `lib/db.ts`,
+  DeepSeek AI in `lib/ai.ts`) and the full UI, a faithful port of the design
+  handoff in `design_handoff_slate_forms/` (plain inline CSS, no Tailwind
+  usage). Seven question types: text, textarea, multiple_choice, dropdown,
+  checkbox (array answers), rating, date.
+- Stack: Next.js 16 (App Router) + TypeScript, better-sqlite3 for
+  persistence (`data.db`, gitignored), DeepSeek V4 Flash
+  (`deepseek-v4-flash`, OpenAI-compatible API, `DEEPSEEK_API_KEY` in
+  `.env.local`) for the AI assistant, document extraction, and form drafting.
+- Contract: server components read via `lib/db`; client components call only
+  the API routes; `lib/validate.ts` (browser-safe) is the single source of
+  truth for answer validation and coercion on both sides.
 
 ## Commands
 

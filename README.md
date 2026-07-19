@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Party Forms
 
-## Getting Started
+An AI-powered form builder: create forms on a dashboard, share a fill link,
+and let respondents answer with traditional controls, a conversational AI
+assistant, or a document upload the AI extracts answers from.
 
-First, run the development server:
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # add your DEEPSEEK_API_KEY
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Forms and responses persist in `data.db` (SQLite, created and seeded with a
+sample "Event Booking Request" form on first run). Without an API key the
+dashboard, builder, and traditional fill mode work fully; only the AI chat,
+document extraction, and AI drafting return a graceful error.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` — dev server (Turbopack)
+- `npm run build` / `npm start` — production build and serve
+- `npm test` — deterministic unit tests (validation/coercion, no AI calls)
+- `npm run test:ai` — AI smoke test against seeded fixtures (needs
+  `DEEPSEEK_API_KEY`, costs tokens)
+- `npm run lint` — ESLint
 
-## Learn More
+## Screens
 
-To learn more about Next.js, take a look at the following resources:
+- `/` — dashboard: form cards with fill/responses links, copy-share-link and
+  delete actions, and a New form button.
+- `/new` — builder: row-based question editor (seven types: short/long text,
+  multiple choice, checkboxes, dropdown, rating, date) with drag reorder,
+  plus a "Draft with AI" panel that prefills the rows from a description.
+- `/fill/[id]` — the shareable respondent link. Traditional controls on the
+  left; a sticky AI assistant on the right with per-question status chips,
+  chat, and document upload (`.pdf`/`.txt`/`.md`). Both sides read and write
+  one shared answers state, so switching modes never loses data. The AI
+  presents a summary and a Ready-to-submit card — it never submits itself.
+- `/forms/[id]` — responses table (submitted time, via form/AI, first four
+  answers) with a click-to-open detail card.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Engineering notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Stack**: Next.js 16 (App Router) + TypeScript, better-sqlite3, DeepSeek
+  V4 Flash via the OpenAI-compatible API (JSON mode, one validation retry).
+- **Reads** happen in server components straight from `lib/db.ts`; **writes**
+  go through five POST endpoints plus one DELETE. `lib/validate.ts` is the
+  single source of truth for answer validity on both server and client.
+- AI output is never trusted: `coerceAnswers` matches options
+  case-insensitively against the defined options and drops anything
+  unmatched; `ready_to_submit` is re-gated server-side on actual required
+  completeness.
+- The UI is a faithful port of the design handoff in
+  `design_handoff_slate_forms/` (see its README for the visual spec).
+- Full decision history: `docs/roadmap.md` (append-only Decision & Prompt
+  Log); product design: `docs/prd.md`.

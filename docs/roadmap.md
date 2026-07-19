@@ -162,3 +162,17 @@ project, from start to finish.
     backend contract (.pdf/.txt/.md). A single `coerceAnswers` sanitizer
     (ported from the prototype's coerce(): case-insensitive option match,
     drop-never-guess) now serves the AI, chat, and submissions routes.
+12. **2026-07-18 — UI integration built and verified.** Milestones M3–M8
+    delivered as six commits: shared hero/toast chrome with the ported
+    shader web component, dashboard with copy-link/delete, builder with
+    drag reorder and all seven types, fill page with shared answers state
+    across traditional controls, AI chat, and document upload, responses
+    table with detail view, and the Draft-with-AI builder panel. Verified
+    live in the browser: AI drafted a 6-question form spanning five types
+    from one description; one chat sentence filled five answers with the
+    dropdown and radio mapped to exact options; "make that 30" corrected
+    the count; the ready card gated submission and the response recorded
+    via 🤖 AI; the fixture PDF filled five answers with a composed summary
+    bubble; empty submit highlighted required fields; delete removed a
+    form and its responses. `npm test` 12/12, AI smoke green, build and
+    lint clean, zero console errors or hydration warnings.
