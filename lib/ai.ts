@@ -1,8 +1,21 @@
 import OpenAI from "openai";
 import type { Answers, Form, Question } from "./types.ts";
 import { coerceAnswers, isAnswered, normalizeQuestions, validateAnswers } from "./validate.ts";
+import {
+  buildCallMetrics,
+  type CallMetrics,
+  type DeepSeekModel,
+  type TokenUsage,
+} from "./ai-metrics.ts";
 
-const MODEL = "deepseek-v4-flash";
+const MODEL: DeepSeekModel = "deepseek-v4-flash";
+
+/** Accumulates per-call metrics for opt-in live AI tests. */
+export const aiCallMetrics: CallMetrics[] = [];
+
+export function clearAiCallMetrics(): void {
+  aiCallMetrics.length = 0;
+}
 
 // ponytail: thinking mode deliberately off — per-turn latency for no gain here.
 function client(): OpenAI {
@@ -13,26 +26,71 @@ function client(): OpenAI {
 
 type ChatMessage = OpenAI.Chat.ChatCompletionMessageParam;
 
+async function streamCompletion(
+  messages: ChatMessage[],
+  temperature: number,
+  label: string
+): Promise<{ raw: string; usage: TokenUsage; ttft_ms: number | null; latency_ms: number }> {
+  const c = client();
+  const started = Date.now();
+  let ttft_ms: number | null = null;
+  let raw = "";
+  let usage: TokenUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+
+  const stream = await c.chat.completions.create({
+    model: MODEL,
+    messages,
+    temperature,
+    response_format: { type: "json_object" },
+    stream: true,
+    stream_options: { include_usage: true },
+  });
+
+  for await (const chunk of stream) {
+    const delta = chunk.choices[0]?.delta?.content;
+    if (delta) {
+      if (ttft_ms === null) ttft_ms = Date.now() - started;
+      raw += delta;
+    }
+    if (chunk.usage) {
+      const u = chunk.usage as TokenUsage & {
+        prompt_tokens: number;
+        completion_tokens: number;
+        total_tokens: number;
+        prompt_cache_hit_tokens?: number;
+        prompt_cache_miss_tokens?: number;
+      };
+      usage = {
+        prompt_tokens: u.prompt_tokens,
+        completion_tokens: u.completion_tokens,
+        total_tokens: u.total_tokens,
+        prompt_cache_hit_tokens: u.prompt_cache_hit_tokens,
+        prompt_cache_miss_tokens: u.prompt_cache_miss_tokens,
+      };
+    }
+  }
+
+  const latency_ms = Date.now() - started;
+  aiCallMetrics.push(
+    buildCallMetrics({ label, model: MODEL, usage, latency_ms, ttft_ms })
+  );
+  return { raw, usage, ttft_ms, latency_ms };
+}
+
 /**
  * JSON-mode call with shape validation and one retry: if the response fails
  * to parse or `check` rejects it, the error is appended and the model gets
- * one more attempt.
+ * one more attempt. Streams for TTFT; records metrics on each attempt.
  */
 async function jsonCall<T>(
   messages: ChatMessage[],
   temperature: number,
-  check: (parsed: unknown) => T | null
+  check: (parsed: unknown) => T | null,
+  label: string
 ): Promise<T> {
-  const c = client();
   let msgs = messages;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await c.chat.completions.create({
-      model: MODEL,
-      messages: msgs,
-      temperature,
-      response_format: { type: "json_object" },
-    });
-    const raw = res.choices[0]?.message?.content ?? "";
+    const { raw } = await streamCompletion(msgs, temperature, `${label}${attempt ? `:retry` : ""}`);
     try {
       const value = check(JSON.parse(raw));
       if (value !== null) return value;
@@ -108,7 +166,8 @@ Respond with ONLY JSON:
         turnAnswers: coerceAnswers(form.questions, p.answers),
         ready: Boolean(p.ready_to_submit),
       };
-    }
+    },
+    "chatTurn"
   );
 
   const answers: Answers = { ...current, ...result.turnAnswers };
@@ -121,7 +180,10 @@ Respond with ONLY JSON:
  * Derive answers from document text. `missing` lists every question
  * (required or optional) the document did not answer.
  */
-export async function extractAnswers(form: Form, text: string): Promise<{ answers: Answers; missing: string[] }> {
+export async function extractAnswers(
+  form: Form,
+  text: string
+): Promise<{ answers: Answers; missing: string[] }> {
   const system = `You extract form answers from a document. The form is "${form.title}".
 
 Questions:
@@ -144,7 +206,8 @@ Respond with ONLY JSON: {"answers": {question id: answer (checkbox values as arr
       const p = parsed as { answers?: unknown };
       if (!p || typeof p !== "object" || !("answers" in p)) return null;
       return coerceAnswers(form.questions, p.answers);
-    }
+    },
+    "extractAnswers"
   );
 
   const missing = form.questions.filter((q) => !isAnswered(answers[q.id])).map((q) => q.id);
@@ -177,6 +240,75 @@ Respond with ONLY JSON:
       const questions = normalizeQuestions(p.questions);
       const desc = typeof p.description === "string" ? p.description.trim() : "";
       return questions && { title: p.title.trim(), description: desc, questions };
-    }
+    },
+    "generateForm"
+  );
+}
+
+export interface DraftFormTurnResult {
+  reply: string;
+  title: string;
+  description: string;
+  questions: Question[];
+}
+
+/**
+ * Creator-agent turn: refine a form draft from chat (and optional document text).
+ * Returns a full draft the builder can preview; human still saves via POST /api/forms.
+ */
+export async function draftFormTurn(
+  history: { role: "user" | "assistant"; content: string }[],
+  current: { title: string; description: string; questions: Question[] },
+  documentText?: string
+): Promise<DraftFormTurnResult> {
+  const system = `You are a form-design assistant (creator agent). Help the user design a form.
+
+Current draft:
+Title: ${current.title || "(empty)"}
+Description: ${current.description || "(empty)"}
+Questions: ${current.questions.length ? schemaText(current.questions) : "(none yet)"}
+
+${TYPE_MEANINGS}
+
+Question types: text, textarea, multiple_choice, dropdown, checkbox, rating, date.
+multiple_choice/dropdown/checkbox need 2-6 options; rating max is 3, 5, 7, or 10.
+
+Rules:
+- Update the draft based on the latest user message${documentText ? " and the attached document" : ""}.
+- Prefer concise forms; mark required only when clearly needed.
+- Reply briefly about what you changed.
+- Always return the FULL updated draft (not a delta).
+
+Respond with ONLY JSON:
+{"reply": string, "title": string, "description": string, "questions": [{"label": string, "type": string, "options"?: string[], "max"?: number, "required": boolean}]}`;
+
+  const userExtra = documentText
+    ? `\n\nDocument to derive the form from:\n${documentText}`
+    : "";
+
+  return jsonCall(
+    [
+      { role: "system", content: system },
+      ...history.slice(0, -1),
+      ...(history.length
+        ? [{ role: history[history.length - 1].role, content: history[history.length - 1].content + userExtra } as ChatMessage]
+        : [{ role: "user" as const, content: `Start a form draft.${userExtra}` }]),
+    ],
+    0.2,
+    (parsed) => {
+      const p = parsed as {
+        reply?: unknown;
+        title?: unknown;
+        description?: unknown;
+        questions?: unknown;
+      };
+      if (typeof p?.reply !== "string") return null;
+      if (typeof p?.title !== "string" || !p.title.trim()) return null;
+      const questions = normalizeQuestions(p.questions);
+      if (!questions) return null;
+      const desc = typeof p.description === "string" ? p.description.trim() : "";
+      return { reply: p.reply, title: p.title.trim(), description: desc, questions };
+    },
+    "draftFormTurn"
   );
 }
