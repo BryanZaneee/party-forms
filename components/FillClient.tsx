@@ -122,6 +122,40 @@ export default function FillClient({ form }: { form: Form }) {
     }
   };
 
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || aiBusy) return;
+    setChat((c) => [...c, { role: "user", text: `📄 Uploaded “${file.name}” — please pull out any answers you can.` }]);
+    setAiBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`/api/forms/${form.id}/extract`, { method: "POST", body: fd });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error);
+      const merged = { ...answers, ...body.answers };
+      setAnswers(merged);
+      setMissing((m) => m.filter((id) => !isAnswered(merged[id])));
+      const found = form.questions.filter((q) => q.id in body.answers).map((q) => q.label);
+      const stillMissing = form.questions.filter((q) => q.required && !isAnswered(merged[q.id])).map((q) => q.label);
+      const summary = found.length
+        ? `I read “${file.name}” and filled in: ${found.join(", ")}.` +
+          (stillMissing.length
+            ? ` Still missing: ${stillMissing.join(", ")}.`
+            : " All required questions are answered — review your answers and submit when ready.")
+        : `I couldn't find any answers in “${file.name}”.` +
+          (stillMissing.length ? ` Still missing: ${stillMissing.join(", ")}.` : "");
+      setChat((c) => [...c, { role: "assistant", text: summary }]);
+    } catch (err) {
+      setChat((c) => [
+        ...c,
+        { role: "assistant", text: err instanceof Error && err.message ? err.message : "Sorry, I couldn't read that document." },
+      ]);
+    }
+    setAiBusy(false);
+  };
+
   const answeredCount = form.questions.filter((q) => isAnswered(answers[q.id])).length;
 
   return (
@@ -402,6 +436,15 @@ export default function FillClient({ form }: { form: Form }) {
                   Send
                 </button>
               </div>
+              <label
+                style={{ fontSize: 12.5, color: "#5c6b82", cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}
+              >
+                <span className="dashed" style={{ border: "1px dashed #b9c3d4", borderRadius: 7, padding: "5px 10px" }}>
+                  📄 Upload a document
+                </span>
+                <span>AI extracts answers from it (.pdf, .txt, .md)</span>
+                <input type="file" accept=".pdf,.txt,.md" onChange={handleUpload} style={{ display: "none" }} />
+              </label>
             </div>
           </div>
         </div>
