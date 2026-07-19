@@ -59,7 +59,7 @@ cp .env.example .env.local   # add your DEEPSEEK_API_KEY
 npm run dev                  # http://localhost:3000
 ```
 
-Forms and responses persist in `data.db` (SQLite, created and seeded on
+Forms and responses persist in `var/data.db` (SQLite, created and seeded on
 first run).
 
 > [!NOTE]

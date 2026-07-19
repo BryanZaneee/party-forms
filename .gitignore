@@ -43,8 +43,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# app data + local env
-data.db*
+# app data (sqlite lives in var/) + local env
+/var/
 !.env.example
 
 # local planning / assignment docs (keep on disk, not in the repo)

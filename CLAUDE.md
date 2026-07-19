@@ -9,7 +9,8 @@ Full spec: `docs/PartyPlaceEngAssignment.pdf` (transcribed in
 `docs/assignment-text.md`). Product design: `docs/prd.md`. Build order,
 tooling rationale, and the append-only Decision & Prompt Log:
 `docs/roadmap.md`. **Every prompt-level request or decision gets appended to
-that log, in chronological order.**
+that log, in chronological order.** `docs/` is kept on disk but gitignored —
+these files are not in the repo.
 
 Explicitly out of scope: auth, user accounts, advanced config, visual polish
 (UI is plain inline CSS, no Tailwind).
@@ -45,7 +46,7 @@ components (`components/*.tsx`) write only through the API routes under
 ### Persistence (`lib/db.ts`)
 
 Singleton better-sqlite3 connection; `PARTY_TE_DB` env var overrides the db
-path (`data.db` by default, `:memory:` supported) — this is the test seam,
+path (`var/data.db` by default, `:memory:` supported) — this is the test seam,
 with `resetDbForTests()` to force a re-open. Questions and answers are
 stored as JSON text columns, not normalized rows. A sample "Event Booking
 Request" form (`SEED_QUESTIONS`) is seeded when the forms table is empty and

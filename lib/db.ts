@@ -1,5 +1,6 @@
 import Database from "better-sqlite3";
 import { randomUUID } from "node:crypto";
+import fs from "node:fs";
 import path from "node:path";
 import type { Answers, Form, Question, Submission } from "./types.ts";
 
@@ -19,13 +20,14 @@ export const SEED_QUESTIONS: Question[] = [
 ];
 
 function resolveDbPath(): string {
-  return process.env.PARTY_TE_DB ?? path.join(process.cwd(), "data.db");
+  return process.env.PARTY_TE_DB ?? path.join(process.cwd(), "var", "data.db");
 }
 
 function getDb(): Database.Database {
   if (db) return db;
   const file = resolveDbPath();
-  db = file === ":memory:" ? new Database(":memory:") : new Database(file);
+  if (file !== ":memory:") fs.mkdirSync(path.dirname(file), { recursive: true });
+  db = new Database(file);
   db.pragma("journal_mode = WAL");
   initSchema(db);
   return db;
