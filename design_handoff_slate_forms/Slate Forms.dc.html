@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  html, body { margin:0; padding:0; background:#eef1f6; }
+  body { --accent:#e11d74; --accent-soft:rgba(225,29,116,.09); }
+  a { color:#e11d74; text-decoration:none; }
+  a:hover { color:#b91560; }
+  input, textarea, select, button { font-family:"Helvetica Neue", Helvetica, Arial, sans-serif; }
+  input:focus, textarea:focus, select:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  @keyframes blink { 0%,100%{opacity:.25} 50%{opacity:1} }
+</style>
+<script src="paper-shader.js"></script>
+</helmet>
+<div style="min-height:100vh; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; color:#0e1524; background:#eef1f6; letter-spacing:-0.01em;">
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <sc-if value="{{ isDash }}" hint-placeholder-val="{{ true }}" data-screen-label="Dashboard">
+    <div>
+      <div style="position:relative; overflow:hidden; background:#070d1a;">
+        <paper-shader style="position:absolute; inset:0;" color-back="#070d1a" color-front="#e11d74" shape="simplex" type="8x8" px-size="2.5" speed="0.65"></paper-shader>
+        <div style="position:relative; max-width:1100px; margin:0 auto; padding:28px 28px 34px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:22px; height:22px; border-radius:6px; background:rgba(255,255,255,.92); display:grid; place-items:center; font-size:12px; font-weight:700; color:#0b1430;">P</div>
+            <div style="font-size:14px; font-weight:600; color:rgba(255,255,255,.9);">Party Forms</div>
+          </div>
+          <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-top:34px; flex-wrap:wrap;">
+            <div>
+              <div style="font-size:32px; font-weight:700; color:#fff; letter-spacing:-0.02em;">Your forms</div>
+              <div style="font-size:14px; color:rgba(255,255,255,.65); margin-top:5px;">{{ formsCountLabel }}</div>
+            </div>
+            <button onClick="{{ newForm }}" style="background:#fff; color:#0b1430; border:none; border-radius:9px; padding:11px 18px; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:#e8edff">＋ New form</button>
+          </div>
+        </div>
+      </div>
+      <div style="max-width:1100px; margin:0 auto; padding:26px 28px 60px;">
+        <sc-if value="{{ hasForms }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px;">
+            <sc-for list="{{ formCards }}" as="f" hint-placeholder-count="2">
+              <div style="position:relative; background:#fff; border:1px solid #e2e7f0; border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:10px; box-shadow:0 1px 2px rgba(15,25,50,.05);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                  <div style="font-size:17px; font-weight:600; cursor:pointer;" onClick="{{ f.edit }}">{{ f.title }}</div>
+                  <div style="font-size:12px; color:#7a8699; white-space:nowrap;">{{ f.created }}</div>
+                </div>
+                <div style="font-size:13.5px; color:#5c6b82; line-height:1.45; min-height:20px;">{{ f.desc }}</div>
+                <div style="font-size:12.5px; color:#7a8699;">{{ f.meta }}</div>
+                <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                  <button onClick="{{ f.fill }}" style="background:var(--accent); color:#fff; border:none; border-radius:7px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer;">Fill out</button>
+                  <button onClick="{{ f.responses }}" style="background:#fff; color:#22304a; border:1px solid #d5dce8; border-radius:7px; padding:8px 12px; font-size:13px; cursor:pointer;" style-hover="border-color:#aab6c9">{{ f.respLabel }}</button>
+                  <div style="flex:1;"></div>
+                  <button onClick="{{ f.toggleMenu }}" style="background:#fff; color:#5c6b82; border:1px solid #d5dce8; border-radius:7px; padding:8px 11px; font-size:13px; cursor:pointer; line-height:1;" style-hover="border-color:#aab6c9">⋯</button>
+                </div>
+                <sc-if value="{{ f.menuOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute; right:16px; bottom:56px; background:#fff; border:1px solid #e2e7f0; border-radius:10px; box-shadow:0 10px 30px rgba(10,20,50,.14); padding:6px; display:flex; flex-direction:column; min-width:150px; z-index:10;">
+                    <button onClick="{{ f.edit }}" style="background:none; border:none; text-align:left; font-size:13.5px; color:#22304a; padding:8px 12px; border-radius:7px; cursor:pointer;" style-hover="background:#f3f5f9">Edit</button>
+                    <button onClick="{{ f.copyLink }}" style="background:none; border:none; text-align:left; font-size:13.5px; color:#22304a; padding:8px 12px; border-radius:7px; cursor:pointer;" style-hover="background:#f3f5f9">Copy share link</button>
+                    <button onClick="{{ f.duplicate }}" style="background:none; border:none; text-align:left; font-size:13.5px; color:#22304a; padding:8px 12px; border-radius:7px; cursor:pointer;" style-hover="background:#f3f5f9">Duplicate</button>
+                    <button onClick="{{ f.del }}" style="background:none; border:none; text-align:left; font-size:13.5px; color:#c0392b; padding:8px 12px; border-radius:7px; cursor:pointer;" style-hover="background:#fdf0ee">Delete</button>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noForms }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center; padding:70px 20px; color:#5c6b82;">
+            <div style="font-size:17px; font-weight:600; color:#22304a;">No forms yet</div>
+            <div style="font-size:14px; margin-top:6px;">Create your first form to start collecting responses.</div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===================== BUILDER ===================== -->
+  <sc-if value="{{ isBuilder }}" hint-placeholder-val="{{ false }}" data-screen-label="Form builder">
+    <div>
+      <div style="position:relative; overflow:hidden; background:#070d1a;">
+        <paper-shader style="position:absolute; inset:0;" color-back="#070d1a" color-front="#e11d74" shape="simplex" type="8x8" px-size="2.5" speed="0.65"></paper-shader>
+        <div style="position:relative; max-width:860px; margin:0 auto; padding:20px 28px 24px;">
+          <a href="#/" style="font-size:13px; color:rgba(255,255,255,.75);">← All forms</a>
+          <div style="font-size:24px; font-weight:700; color:#fff; margin-top:10px;">{{ builderTitle }}</div>
+        </div>
+      </div>
+      <div style="max-width:1100px; margin:0 auto; padding:24px 28px 80px; display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;">
+        <div style="flex:1.6; min-width:420px; display:flex; flex-direction:column; gap:16px;">
+        <div style="background:#fff; border:1px solid #e2e7f0; border-radius:12px; padding:22px; display:flex; flex-direction:column; gap:12px;">
+          <input value="{{ draftTitle }}" onChange="{{ onDraftTitle }}" placeholder="Form title" style="font-size:20px; font-weight:600; border:none; border-bottom:2px solid #e2e7f0; padding:6px 2px; background:transparent;" />
+          <textarea value="{{ draftDesc }}" onChange="{{ onDraftDesc }}" placeholder="Description or welcome text (optional)" rows="2" style="font-size:14px; border:1px solid #e2e7f0; border-radius:8px; padding:10px; resize:vertical; color:#3a4a63;"></textarea>
+        </div>
+        <sc-for list="{{ bQuestions }}" as="q" hint-placeholder-count="2">
+          <div onDragOver="{{ q.onDragOver }}" onDrop="{{ q.onDrop }}" style="background:#fff; border:1px solid {{ q.cardBorder }}; border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; gap:12px; opacity:{{ q.cardOpacity }};">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <div draggable="true" onDragStart="{{ q.onDragStart }}" onDragEnd="{{ q.onDragEnd }}" title="Drag to reorder" style="cursor:grab; color:#b3bccb; font-size:15px; padding:2px 4px; user-select:none;">⠿</div>
+              <div style="font-size:12px; font-weight:700; color:#9aa5b6; width:16px;">{{ q.num }}</div>
+              <input value="{{ q.label }}" onChange="{{ q.onLabel }}" placeholder="Question" style="flex:1; min-width:220px; font-size:15px; font-weight:500; border:1px solid #e2e7f0; border-radius:8px; padding:9px 12px;" />
+              <select value="{{ q.type }}" onChange="{{ q.onType }}" style="font-size:13px; border:1px solid #d5dce8; border-radius:8px; padding:9px 8px; background:#fff; color:#22304a; cursor:pointer;">
+                <sc-for list="{{ typeOpts }}" as="t" hint-placeholder-count="3">
+                  <option value="{{ t.v }}">{{ t.label }}</option>
+                </sc-for>
+              </select>
+            </div>
+            <sc-if value="{{ q.showOptions }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:7px; margin-left:38px;">
+                <sc-for list="{{ q.optRows }}" as="o" hint-placeholder-count="2">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:22px; text-align:center; color:#9aa5b6; font-size:14px; flex-shrink:0;">{{ o.glyph }}</div>
+                    <input value="{{ o.text }}" onChange="{{ o.onChange }}" placeholder="{{ o.ph }}" style="flex:1; max-width:340px; font-size:13.5px; border:1px solid #e2e7f0; border-radius:8px; padding:8px 11px;" />
+                    <button onClick="{{ o.remove }}" title="Remove option" style="background:none; border:none; color:#9aa5b6; cursor:pointer; font-size:13px;" style-hover="color:#c0392b">✕</button>
+                  </div>
+                </sc-for>
+                <button onClick="{{ q.addOption }}" style="align-self:flex-start; margin-left:32px; background:none; border:1px dashed #b9c3d4; border-radius:7px; padding:6px 12px; font-size:12.5px; color:#3a4a63; cursor:pointer;" style-hover="border-color:var(--accent); color:var(--accent)">＋ Add option {{ q.nextOpt }}</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ q.isRating }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; align-items:center; gap:10px; margin-left:38px; font-size:13px; color:#3a4a63;">
+                <span>Scale</span>
+                <select value="{{ q.maxStr }}" onChange="{{ q.onMax }}" style="font-size:13px; border:1px solid #d5dce8; border-radius:8px; padding:7px 8px; background:#fff; color:#22304a; cursor:pointer;">
+                  <sc-for list="{{ ratingScales }}" as="r" hint-placeholder-count="2">
+                    <option value="{{ r.v }}">{{ r.label }}</option>
+                  </sc-for>
+                </select>
+                <span style="color:#9aa5b6;">respondents pick a number from {{ q.scalePreview }}</span>
+              </div>
+            </sc-if>
+            <div style="display:flex; align-items:center; gap:14px; margin-left:38px;">
+              <label style="display:flex; align-items:center; gap:7px; font-size:13px; color:#3a4a63; cursor:pointer;">
+                <input type="checkbox" checked="{{ q.required }}" onChange="{{ q.onRequired }}" style="accent-color:var(--accent); width:15px; height:15px;" /> Required
+              </label>
+              <div style="flex:1;"></div>
+              <button onClick="{{ q.del }}" style="background:none; border:none; cursor:pointer; color:#c0392b; font-size:13px;">Remove</button>
+            </div>
+          </div>
+        </sc-for>
+        <div style="position:relative;">
+          <button onClick="{{ toggleAddMenu }}" style="width:100%; background:#fff; border:1px dashed #b9c3d4; border-radius:10px; padding:12px 16px; font-size:14px; font-weight:600; color:#3a4a63; cursor:pointer;" style-hover="border-color:var(--accent); color:var(--accent)">＋ Add question</button>
+          <sc-if value="{{ addMenuOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute; left:0; top:calc(100% + 6px); background:#fff; border:1px solid #e2e7f0; border-radius:10px; box-shadow:0 10px 30px rgba(10,20,50,.14); padding:6px; display:grid; grid-template-columns:1fr 1fr; gap:2px; min-width:320px; z-index:10;">
+              <sc-for list="{{ addBtns }}" as="b" hint-placeholder-count="4">
+                <button onClick="{{ b.onClick }}" style="background:none; border:none; text-align:left; font-size:13.5px; color:#22304a; padding:9px 12px; border-radius:7px; cursor:pointer;" style-hover="background:#f3f5f9">{{ b.label }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:8px;">
+          <button onClick="{{ saveDraft }}" style="background:var(--accent); color:#fff; border:none; border-radius:9px; padding:12px 22px; font-size:14.5px; font-weight:600; cursor:pointer;">Save form</button>
+          <a href="#/" style="padding:12px 18px; font-size:14px; color:#5c6b82;">Cancel</a>
+        </div>
+        </div>
+        <!-- AI sidebar -->
+        <div style="flex:1; min-width:300px; position:sticky; top:16px; background:#fff; border:1px solid #e2e7f0; border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:12px; box-shadow:0 6px 24px rgba(10,20,50,.07);">
+          <div style="display:flex; align-items:center; gap:9px;">
+            <div style="width:8px; height:8px; border-radius:50%; background:var(--accent);"></div>
+            <div style="font-size:14px; font-weight:600;">Draft with AI</div>
+          </div>
+          <div style="font-size:13px; color:#5c6b82; line-height:1.5;">Describe the form you need — AI drafts a title, description and questions that prefill the builder rows for you to review and edit before saving.</div>
+          <textarea value="{{ genInput }}" onChange="{{ onGenInput }}" rows="4" placeholder="e.g. An event booking request form: name, event date, guest count, meal preference, special requests…" style="font-size:13.5px; border:1px solid #d5dce8; border-radius:9px; padding:10px 12px; resize:vertical;"></textarea>
+          <button onClick="{{ generateForm }}" disabled="{{ genBusy }}" style="background:var(--accent); color:#fff; border:none; border-radius:9px; padding:11px 16px; font-size:13.5px; font-weight:600; cursor:pointer;">{{ genBtnLabel }}</button>
+          <sc-if value="{{ hasGenError }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:12.5px; color:#c0392b;">{{ genError }}</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ===================== FILL ===================== -->
+  <sc-if value="{{ isFill }}" hint-placeholder-val="{{ false }}" data-screen-label="Fill form">
+    <div>
+      <div style="position:relative; overflow:hidden; background:#070d1a;">
+        <paper-shader style="position:absolute; inset:0;" color-back="#070d1a" color-front="#e11d74" shape="simplex" type="8x8" px-size="2.5" speed="0.65"></paper-shader>
+        <div style="position:relative; max-width:1100px; margin:0 auto; padding:22px 28px 26px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <a href="#/" style="font-size:13px; color:rgba(255,255,255,.75);">← Party Forms</a>
+            <div style="font-size:12.5px; color:rgba(255,255,255,.75); background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); padding:5px 12px; border-radius:99px;">{{ progressLabel }}</div>
+          </div>
+          <div style="font-size:26px; font-weight:700; color:#fff; margin-top:12px;">{{ fillTitle }}</div>
+          <sc-if value="{{ hasFillDesc }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:14px; color:rgba(255,255,255,.7); margin-top:6px; max-width:640px; line-height:1.5;">{{ fillDesc }}</div>
+          </sc-if>
+        </div>
+      </div>
+
+      <sc-if value="{{ submitted }}" hint-placeholder-val="{{ false }}">
+        <div style="max-width:520px; margin:60px auto; background:#fff; border:1px solid #e2e7f0; border-radius:14px; padding:40px; text-align:center;">
+          <div style="width:52px; height:52px; border-radius:50%; background:var(--accent-soft); color:var(--accent); display:grid; place-items:center; font-size:24px; margin:0 auto;">✓</div>
+          <div style="font-size:20px; font-weight:700; margin-top:16px;">Response submitted</div>
+          <div style="font-size:14px; color:#5c6b82; margin-top:6px;">Thanks — your answers were recorded.</div>
+          <div style="display:flex; gap:10px; justify-content:center; margin-top:22px;">
+            <button onClick="{{ fillAgain }}" style="background:var(--accent); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer;">Fill out again</button>
+            <a href="#/" style="padding:10px 14px; font-size:14px;">Dashboard</a>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ notSubmitted }}" hint-placeholder-val="{{ true }}">
+        <div style="max-width:1100px; margin:0 auto; padding:24px 28px 80px; display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap;">
+          <!-- form column -->
+          <div style="flex:1.25; min-width:380px; display:flex; flex-direction:column; gap:14px;">
+            <sc-for list="{{ fQuestions }}" as="q" hint-placeholder-count="3">
+              <div style="background:#fff; border:1px solid {{ q.borderColor }}; border-radius:12px; padding:18px 20px;">
+                <div style="display:flex; gap:6px; align-items:baseline;">
+                  <div style="font-size:15px; font-weight:600;">{{ q.label }}</div>
+                  <sc-if value="{{ q.required }}" hint-placeholder-val="{{ false }}"><div style="color:#c0392b; font-size:14px;">*</div></sc-if>
+                  <div style="flex:1;"></div>
+                  <sc-if value="{{ q.answered }}" hint-placeholder-val="{{ false }}"><div style="font-size:11.5px; color:var(--accent); font-weight:600;">✓ answered</div></sc-if>
+                </div>
+                <sc-if value="{{ q.missing }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:12.5px; color:#c0392b; margin-top:4px;">This question is required.</div>
+                </sc-if>
+                <div style="margin-top:12px;">
+                  <sc-if value="{{ q.isShort }}" hint-placeholder-val="{{ true }}">
+                    <input value="{{ q.value }}" onChange="{{ q.onChange }}" placeholder="Your answer" style="width:100%; box-sizing:border-box; font-size:14px; border:1px solid #d5dce8; border-radius:8px; padding:10px 12px;" />
+                  </sc-if>
+                  <sc-if value="{{ q.isLong }}" hint-placeholder-val="{{ false }}">
+                    <textarea value="{{ q.value }}" onChange="{{ q.onChange }}" placeholder="Your answer" rows="3" style="width:100%; box-sizing:border-box; font-size:14px; border:1px solid #d5dce8; border-radius:8px; padding:10px 12px; resize:vertical;"></textarea>
+                  </sc-if>
+                  <sc-if value="{{ q.isDate }}" hint-placeholder-val="{{ false }}">
+                    <input type="date" value="{{ q.value }}" onChange="{{ q.onChange }}" style="font-size:14px; border:1px solid #d5dce8; border-radius:8px; padding:9px 12px;" />
+                  </sc-if>
+                  <sc-if value="{{ q.isDrop }}" hint-placeholder-val="{{ false }}">
+                    <select value="{{ q.value }}" onChange="{{ q.onChange }}" style="font-size:14px; border:1px solid #d5dce8; border-radius:8px; padding:9px 10px; background:#fff; min-width:220px; cursor:pointer;">
+                      <option value="">Select…</option>
+                      <sc-for list="{{ q.options }}" as="o" hint-placeholder-count="2">
+                        <option value="{{ o.label }}">{{ o.label }}</option>
+                      </sc-for>
+                    </select>
+                  </sc-if>
+                  <sc-if value="{{ q.isChoice }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                      <sc-for list="{{ q.options }}" as="o" hint-placeholder-count="2">
+                        <label style="display:flex; align-items:center; gap:9px; font-size:14px; cursor:pointer; padding:8px 10px; border:1px solid {{ o.borderColor }}; border-radius:8px; background:{{ o.bg }};">
+                          <input type="radio" checked="{{ o.checked }}" onChange="{{ o.onToggle }}" style="accent-color:var(--accent);" /> {{ o.label }}
+                        </label>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ q.isCheck }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                      <sc-for list="{{ q.options }}" as="o" hint-placeholder-count="2">
+                        <label style="display:flex; align-items:center; gap:9px; font-size:14px; cursor:pointer; padding:8px 10px; border:1px solid {{ o.borderColor }}; border-radius:8px; background:{{ o.bg }};">
+                          <input type="checkbox" checked="{{ o.checked }}" onChange="{{ o.onToggle }}" style="accent-color:var(--accent);" /> {{ o.label }}
+                        </label>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ q.isRating }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <sc-for list="{{ q.stars }}" as="s" hint-placeholder-count="5">
+                        <button onClick="{{ s.onClick }}" style="width:42px; height:42px; border-radius:9px; border:1px solid {{ s.border }}; background:{{ s.bg }}; color:{{ s.color }}; font-size:15px; font-weight:600; cursor:pointer;">{{ s.n }}</button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <button onClick="{{ submitManual }}" style="align-self:flex-start; background:var(--accent); color:#fff; border:none; border-radius:9px; padding:13px 26px; font-size:15px; font-weight:600; cursor:pointer; margin-top:6px;">Submit response</button>
+          </div>
+
+          <!-- AI panel -->
+          <div style="flex:1; min-width:330px; position:sticky; top:16px; background:#fff; border:1px solid #e2e7f0; border-radius:14px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 6px 24px rgba(10,20,50,.07);">
+            <div style="padding:14px 18px; border-bottom:1px solid #edf0f6; display:flex; align-items:center; gap:9px;">
+              <div style="width:8px; height:8px; border-radius:50%; background:var(--accent);"></div>
+              <div style="font-size:14px; font-weight:600;">AI assistant</div>
+              <div style="font-size:12px; color:#7a8699;">answers fill in live</div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; padding:10px 16px; border-bottom:1px solid #edf0f6;">
+              <sc-for list="{{ checkItems }}" as="c" hint-placeholder-count="4">
+                <div style="font-size:11.5px; font-weight:600; padding:4px 9px; border-radius:99px; background:{{ c.bg }}; color:{{ c.color }}; border:1px solid {{ c.border }};">{{ c.icon }} {{ c.label }}</div>
+              </sc-for>
+            </div>
+            <div id="chat-scroll" style="height:380px; overflow-y:auto; padding:16px 18px; display:flex; flex-direction:column; gap:10px; background:#f8fafd;">
+              <sc-for list="{{ chatMsgs }}" as="m" hint-placeholder-count="1">
+                <div style="align-self:{{ m.align }}; max-width:85%; background:{{ m.bg }}; color:{{ m.color }}; border:1px solid {{ m.border }}; border-radius:12px; padding:9px 13px; font-size:13.5px; line-height:1.5; white-space:pre-wrap;">{{ m.text }}</div>
+              </sc-for>
+              <sc-if value="{{ aiBusy }}" hint-placeholder-val="{{ false }}">
+                <div style="align-self:flex-start; color:#7a8699; font-size:13px; padding:4px 2px;">
+                  <span style="animation:blink 1.2s infinite;">●</span> <span style="animation:blink 1.2s .2s infinite;">●</span> <span style="animation:blink 1.2s .4s infinite;">●</span>
+                </div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ showAiReady }}" hint-placeholder-val="{{ false }}">
+              <div style="margin:0 14px 12px; margin-top:12px; border:1px solid var(--accent); background:var(--accent-soft); border-radius:11px; padding:13px 15px;">
+                <div style="font-size:13.5px; font-weight:600;">Ready to submit</div>
+                <div style="font-size:12.5px; color:#3a4a63; margin-top:3px; line-height:1.45;">All required questions are answered. Review the summary above and your answers on the left — the AI never submits for you.</div>
+                <button onClick="{{ submitAI }}" style="margin-top:10px; background:var(--accent); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:600; cursor:pointer;">Submit response</button>
+              </div>
+            </sc-if>
+            <div style="padding:12px 14px; border-top:1px solid #edf0f6; display:flex; flex-direction:column; gap:9px;">
+              <div style="display:flex; gap:8px;">
+                <textarea value="{{ chatInput }}" onChange="{{ onChatInput }}" onKeyDown="{{ onChatKey }}" placeholder="Answer naturally, e.g. “I'm Maya, I'll be there May 12”" rows="2" style="flex:1; font-size:13.5px; border:1px solid #d5dce8; border-radius:9px; padding:9px 11px; resize:none;"></textarea>
+                <button onClick="{{ sendChat }}" disabled="{{ aiBusy }}" style="background:var(--accent); color:#fff; border:none; border-radius:9px; padding:0 16px; font-size:13.5px; font-weight:600; cursor:pointer;">Send</button>
+              </div>
+              <label style="font-size:12.5px; color:#5c6b82; cursor:pointer; display:flex; align-items:center; gap:7px;">
+                <span style="border:1px dashed #b9c3d4; border-radius:7px; padding:5px 10px;" style-hover="border-color:var(--accent); color:var(--accent)">📄 Upload a document</span>
+                <span>AI extracts answers from it</span>
+                <input type="file" accept=".txt,.md,.csv,.json,.html" onChange="{{ onUpload }}" style="display:none;" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ===================== RESPONSES ===================== -->
+  <sc-if value="{{ isResponses }}" hint-placeholder-val="{{ false }}" data-screen-label="Responses">
+    <div>
+      <div style="position:relative; overflow:hidden; background:#070d1a;">
+        <paper-shader style="position:absolute; inset:0;" color-back="#070d1a" color-front="#e11d74" shape="simplex" type="8x8" px-size="2.5" speed="0.65"></paper-shader>
+        <div style="position:relative; max-width:1100px; margin:0 auto; padding:20px 28px 24px;">
+          <a href="#/" style="font-size:13px; color:rgba(255,255,255,.75);">← All forms</a>
+          <div style="font-size:24px; font-weight:700; color:#fff; margin-top:10px;">{{ respTitle }}</div>
+          <div style="font-size:13.5px; color:rgba(255,255,255,.65); margin-top:4px;">{{ respCountLabel }}</div>
+        </div>
+      </div>
+      <div style="max-width:1100px; margin:0 auto; padding:24px 28px 80px; display:flex; flex-direction:column; gap:16px;">
+        <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff; border:1px solid #e2e7f0; border-radius:12px; padding:22px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-size:15px; font-weight:700;">{{ detailTitle }}</div>
+              <button onClick="{{ closeDetail }}" style="background:none; border:none; font-size:14px; color:#5c6b82; cursor:pointer;">✕ Close</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:0; margin-top:12px;">
+              <sc-for list="{{ detailItems }}" as="d" hint-placeholder-count="3">
+                <div style="display:grid; grid-template-columns:280px 1fr; gap:14px; padding:10px 0; border-top:1px solid #edf0f6; font-size:13.5px;">
+                  <div style="color:#5c6b82;">{{ d.label }}</div>
+                  <div style="font-weight:500; white-space:pre-wrap;">{{ d.val }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasResponses }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#fff; border:1px solid #e2e7f0; border-radius:12px; overflow:auto;">
+            <div style="display:grid; grid-template-columns:{{ respGrid }}; gap:0; min-width:760px;">
+              <sc-for list="{{ respHeaders }}" as="h" hint-placeholder-count="4">
+                <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#7a8699; padding:13px 16px; border-bottom:1px solid #e2e7f0; background:#f8fafd;">{{ h.label }}</div>
+              </sc-for>
+              <sc-for list="{{ respCells }}" as="c" hint-placeholder-count="8">
+                <div onClick="{{ c.open }}" style="font-size:13.5px; padding:12px 16px; border-bottom:1px solid #edf0f6; cursor:pointer; background:{{ c.bg }}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:{{ c.color }};">{{ c.text }}</div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noResponses }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center; padding:60px 20px; color:#5c6b82;">
+            <div style="font-size:16px; font-weight:600; color:#22304a;">No responses yet</div>
+            <div style="font-size:13.5px; margin-top:6px;">Share the fill link to start collecting answers.</div>
+            <button onClick="{{ copyCurrentLink }}" style="margin-top:16px; background:var(--accent); color:#fff; border:none; border-radius:8px; padding:10px 16px; font-size:13.5px; font-weight:600; cursor:pointer;">Copy fill link</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#0e1524; color:#fff; font-size:13.5px; padding:11px 20px; border-radius:99px; box-shadow:0 8px 24px rgba(0,0,0,.25); z-index:50;">{{ toast }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#e11d74&quot;,&quot;options&quot;:[&quot;#2447ff&quot;,&quot;#06b6d4&quot;,&quot;#7c3aff&quot;,&quot;#00b368&quot;,&quot;#e11d74&quot;,&quot;#ff5c33&quot;,&quot;#f59e0b&quot;,&quot;#19c8ff&quot;],&quot;section&quot;:&quot;Theme&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;shaderSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.65,&quot;min&quot;:0,&quot;max&quot;:1.2,&quot;step&quot;:0.05,&quot;section&quot;:&quot;Theme&quot;,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    let forms = [], responses = [];
+    try {
+      forms = JSON.parse(localStorage.getItem('slateforms.forms.v1') || 'null');
+      responses = JSON.parse(localStorage.getItem('slateforms.responses.v1') || 'null');
+    } catch (e) {}
+    if (!forms) { const seed = this.seed(); forms = seed.forms; responses = seed.responses; }
+    if (!responses) responses = [];
+    this.state = {
+      route: { view: 'dash', id: null },
+      forms, responses,
+      draft: null,
+      fillAnswers: {}, submitted: false, missing: [],
+      chat: [], chatInput: '', aiBusy: false, aiReady: false,
+      genInput: '', genBusy: false, genError: '',
+      detailId: null, toast: '', menuId: null, dragIdx: null, dragOverIdx: null, addMenuOpen: false
+    };
+  }
+
+  seed() {
+    const f = {
+      id: 'demo1', createdAt: Date.now() - 86400000 * 3,
+      title: 'Team Offsite RSVP',
+      description: 'Help us plan the spring offsite — takes about a minute. You can also just tell the AI assistant your details.',
+      questions: [
+        { id: 'q1', type: 'short', label: 'Full name', required: true, options: [] },
+        { id: 'q2', type: 'radio', label: 'Will you attend?', required: true, options: ['Yes', 'No', 'Maybe'] },
+        { id: 'q3', type: 'check', label: 'Which activities interest you?', required: false, options: ['Hiking', 'Cooking class', 'Karaoke', 'Board games'] },
+        { id: 'q4', type: 'drop', label: 'T-shirt size', required: false, options: ['XS', 'S', 'M', 'L', 'XL'] },
+        { id: 'q5', type: 'date', label: 'Arrival date', required: false, options: [] },
+        { id: 'q6', type: 'rating', label: 'How excited are you?', required: true, options: [], max: 5 },
+        { id: 'q7', type: 'long', label: 'Dietary restrictions or notes', required: false, options: [] }
+      ]
+    };
+    const responses = [
+      { id: 'r1', formId: 'demo1', submittedAt: Date.now() - 86400000 * 2, via: 'form', answers: { q1: 'Ana Torres', q2: 'Yes', q3: ['Hiking', 'Karaoke'], q4: 'M', q5: '2026-08-14', q6: 5, q7: 'Vegetarian' } },
+      { id: 'r2', formId: 'demo1', submittedAt: Date.now() - 86400000, via: 'ai', answers: { q1: 'Ben Okafor', q2: 'Maybe', q3: ['Board games'], q4: 'L', q6: 3 } }
+    ];
+    return { forms: [f], responses };
+  }
+
+  persist() {
+    localStorage.setItem('slateforms.forms.v1', JSON.stringify(this.state.forms));
+    localStorage.setItem('slateforms.responses.v1', JSON.stringify(this.state.responses));
+  }
+
+  componentDidMount() {
+    this._onHash = () => this.applyRoute();
+    window.addEventListener('hashchange', this._onHash);
+    this.applyRoute();
+    this.applyTweaks();
+    this.persist();
+  }
+  componentWillUnmount() { window.removeEventListener('hashchange', this._onHash); }
+  componentDidUpdate() {
+    this.applyTweaks();
+    const el = document.getElementById('chat-scroll');
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+  applyTweaks() {
+    document.body.style.setProperty('--accent', this.props.accent ?? '#e11d74');
+    const sp = String(this.props.shaderSpeed ?? 0.65);
+    const ac = this.props.accent ?? '#e11d74';
+    document.querySelectorAll('paper-shader').forEach(s => {
+      if (s.getAttribute('speed') !== sp) s.setAttribute('speed', sp);
+      if (s.getAttribute('color-front') !== ac) s.setAttribute('color-front', ac);
+    });
+  }
+
+  applyRoute() {
+    const h = location.hash || '#/';
+    const parts = h.replace(/^#\//, '').split('/');
+    let route = { view: 'dash', id: null };
+    if (parts[0] === 'new') route = { view: 'builder', id: null };
+    else if (parts[0] === 'edit') route = { view: 'builder', id: parts[1] };
+    else if (parts[0] === 'fill') route = { view: 'fill', id: parts[1] };
+    else if (parts[0] === 'responses') route = { view: 'responses', id: parts[1] };
+    const st = { route, missing: [], detailId: null, toast: '' };
+    if (route.view === 'builder') {
+      const src = this.state.forms.find(f => f.id === route.id);
+      st.draft = src ? JSON.parse(JSON.stringify(src)) : { id: null, title: '', description: '', questions: [], createdAt: Date.now() };
+    }
+    if (route.view === 'fill') {
+      const f = this.state.forms.find(x => x.id === route.id);
+      st.fillAnswers = {}; st.submitted = false; st.chatInput = ''; st.aiBusy = false; st.aiReady = false;
+      st.chat = [{ role: 'assistant', text: f ? `Hi! I can help you fill out “${f.title}”. Tell me your answers in your own words, or upload a document and I'll pull out what I can. What would you like to start with?` : 'Form not found.' }];
+    }
+    this.setState(st);
+  }
+
+  toastMsg(t) {
+    this.setState({ toast: t });
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => this.setState({ toast: '' }), 2200);
+  }
+  uid(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  fmtDate(ts) { return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+  fmtWhen(ts) { return new Date(ts).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
+
+  valStr(v) {
+    if (v == null || v === '') return '—';
+    if (Array.isArray(v)) return v.length ? v.join(', ') : '—';
+    return String(v);
+  }
+  isAnswered(v) {
+    if (v == null) return false;
+    if (Array.isArray(v)) return v.length > 0;
+    if (typeof v === 'string') return v.trim() !== '';
+    return true;
+  }
+
+  setAnswer(qid, val) {
+    this.setState(s => ({ fillAnswers: { ...s.fillAnswers, [qid]: val }, missing: s.missing.filter(m => m !== qid) }));
+  }
+  toggleCheck(qid, opt) {
+    this.setState(s => {
+      const cur = Array.isArray(s.fillAnswers[qid]) ? s.fillAnswers[qid] : [];
+      const next = cur.includes(opt) ? cur.filter(o => o !== opt) : [...cur, opt];
+      return { fillAnswers: { ...s.fillAnswers, [qid]: next } };
+    });
+  }
+
+  currentForm() { return this.state.forms.find(f => f.id === this.state.route.id); }
+
+  submitResponse(via) {
+    const form = this.currentForm();
+    if (!form) return;
+    const resp = { id: this.uid('r'), formId: form.id, submittedAt: Date.now(), via, answers: { ...this.state.fillAnswers } };
+    this.setState(s => ({ responses: [...s.responses, resp], submitted: true }), () => this.persist());
+  }
+
+  // ---------- AI ----------
+  buildSystem(form) {
+    const qs = form.questions.map(q => ({ id: q.id, label: q.label, type: q.type, required: q.required, options: q.options, max: q.type === 'rating' ? (q.max || 5) : undefined }));
+    const answers = {};
+    form.questions.forEach(q => { answers[q.id] = this.isAnswered(this.state.fillAnswers[q.id]) ? this.state.fillAnswers[q.id] : null; });
+    return `You are a friendly assistant collecting answers for the form "${form.title}". ${form.description || ''}
+Questions (JSON): ${JSON.stringify(qs)}
+Type meanings: short/long = free text; radio/drop = pick exactly one of options; check = pick any subset of options (array); rating = integer from 1 to the question's "max"; date = YYYY-MM-DD string.
+Current recorded answers (null = unanswered): ${JSON.stringify(answers)}
+
+Respond with ONLY minified JSON, no markdown fences: {"reply":"...","updates":{},"ready_to_submit":false}
+- "reply": short conversational plain-text message to the respondent.
+- "updates": map of question id -> value for answers you newly learned OR the user corrected. Only include ids you're confident about. Values must match the type rules above (radio/drop/check values must exactly match one of the listed options).
+- Recognize natural phrasing ("I'm Maya", "actually make that a large" = correction).
+- Track answered vs unanswered; ask for the next missing REQUIRED question (at most two questions per turn). Optional questions: offer once, don't nag.
+- If the user gives a document, extract every answer you can, then say what you found and what's still missing.
+- When ALL required questions are answered (including via this turn's updates), present a complete summary of every recorded answer in "reply" and set "ready_to_submit": true. You NEVER submit the form yourself — the respondent reviews the summary and clicks the Submit button.`;
+  }
+
+  parseAI(text) {
+    try {
+      let t = text.replace(/```json|```/g, '');
+      const a = t.indexOf('{'), b = t.lastIndexOf('}');
+      if (a === -1 || b === -1) throw 0;
+      return JSON.parse(t.slice(a, b + 1));
+    } catch (e) { return { reply: text, updates: {}, ready_to_submit: false }; }
+  }
+
+  coerce(form, qid, val) {
+    const q = form.questions.find(x => x.id === qid);
+    if (!q) return undefined;
+    const matchOpt = v => q.options.find(o => o.toLowerCase() === String(v).toLowerCase().trim());
+    if (q.type === 'radio' || q.type === 'drop') { const m = matchOpt(val); return m; }
+    if (q.type === 'check') {
+      const arr = Array.isArray(val) ? val : [val];
+      const out = arr.map(matchOpt).filter(Boolean);
+      return out.length ? out : undefined;
+    }
+    if (q.type === 'rating') { const n = Math.round(Number(val)); return n >= 1 && n <= (q.max || 5) ? n : undefined; }
+    if (val == null) return undefined;
+    return String(val);
+  }
+
+  async runAI() {
+    const form = this.currentForm();
+    if (!form) return;
+    this.setState({ aiBusy: true });
+    try {
+      const msgs = this.state.chat.map(m => ({
+        role: m.role,
+        content: m.doc ? `${m.text}\n\n--- DOCUMENT CONTENT ---\n${m.doc}` : m.text
+      }));
+      const raw = await window.claude.complete({
+        system: this.buildSystem(form),
+        messages: msgs,
+        max_tokens: 2000
+      });
+      const parsed = this.parseAI(raw);
+      const updates = {};
+      Object.entries(parsed.updates || {}).forEach(([qid, v]) => {
+        const cv = this.coerce(form, qid, v);
+        if (cv !== undefined) updates[qid] = cv;
+      });
+      this.setState(s => ({
+        fillAnswers: { ...s.fillAnswers, ...updates },
+        chat: [...s.chat, { role: 'assistant', text: parsed.reply || '…' }],
+        aiBusy: false,
+        aiReady: s.aiReady || parsed.ready_to_submit === true,
+        missing: s.missing.filter(m => !(m in updates))
+      }));
+    } catch (e) {
+      this.setState(s => ({ aiBusy: false, chat: [...s.chat, { role: 'assistant', text: 'Sorry, I hit an error reaching the AI. Please try again.' }] }));
+    }
+  }
+
+  sendChatMsg() {
+    const t = this.state.chatInput.trim();
+    if (!t || this.state.aiBusy) return;
+    this.setState(s => ({ chat: [...s.chat, { role: 'user', text: t }], chatInput: '' }), () => this.runAI());
+  }
+
+  handleUpload(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    e.target.value = '';
+    const reader = new FileReader();
+    reader.onload = () => {
+      const doc = String(reader.result || '').slice(0, 14000);
+      this.setState(s => ({ chat: [...s.chat, { role: 'user', text: `📄 Uploaded “${file.name}” — please pull out any answers you can.`, doc }] }), () => this.runAI());
+    };
+    reader.readAsText(file);
+  }
+
+  async generateForm() {
+    const desc = this.state.genInput.trim();
+    if (!desc || this.state.genBusy) return;
+    this.setState({ genBusy: true, genError: '' });
+    try {
+      const raw = await window.claude.complete({
+        system: `You draft form definitions. Given a description, respond with ONLY minified JSON, no markdown fences: {"title":"...","description":"...","questions":[{"label":"...","type":"short","required":true,"options":[]}]}
+Allowed types: short (short text), long (long text), radio (multiple choice), check (checkboxes), drop (dropdown), rating (numeric scale — include "max": 5 or 10), date. options only for radio/check/drop (2-6 concise options). 4-8 questions, mark truly essential ones required. description: one welcoming sentence.`,
+        messages: [{ role: 'user', content: desc }],
+        max_tokens: 2000
+      });
+      const parsed = this.parseAI(raw);
+      if (!parsed.questions || !Array.isArray(parsed.questions)) throw new Error('bad shape');
+      const types = ['short', 'long', 'radio', 'check', 'drop', 'rating', 'date'];
+      const qs = parsed.questions
+        .filter(q => q && q.label)
+        .map(q => ({
+          id: this.uid('q'),
+          label: String(q.label),
+          type: types.includes(q.type) ? q.type : 'short',
+          required: !!q.required,
+          max: q.type === 'rating' ? ([3, 5, 7, 10].includes(q.max) ? q.max : 5) : undefined,
+          options: ['radio', 'check', 'drop'].includes(q.type) ? (Array.isArray(q.options) ? q.options.map(String) : ['Option A', 'Option B']) : []
+        }));
+      this.setState(s => {
+        const nd = JSON.parse(JSON.stringify(s.draft));
+        if (!nd.title.trim() && parsed.title) nd.title = String(parsed.title);
+        if (!nd.description.trim() && parsed.description) nd.description = String(parsed.description);
+        nd.questions = [...nd.questions, ...qs];
+        return { draft: nd, genBusy: false, genInput: '' };
+      });
+    } catch (e) {
+      this.setState({ genBusy: false, genError: 'AI drafting failed — please try again.' });
+    }
+  }
+
+  // ---------- renderVals ----------
+  renderVals() {
+    const s = this.state;
+    const view = s.route.view;
+    const typeOpts = [
+      { v: 'short', label: 'Short text' }, { v: 'long', label: 'Long text' },
+      { v: 'radio', label: 'Multiple choice' }, { v: 'check', label: 'Checkboxes' },
+      { v: 'drop', label: 'Dropdown' }, { v: 'rating', label: 'Rating' }, { v: 'date', label: 'Date' }
+    ];
+    const vals = {
+      isDash: view === 'dash', isBuilder: view === 'builder', isFill: view === 'fill', isResponses: view === 'responses',
+      hasToast: !!s.toast, toast: s.toast, typeOpts,
+      newForm: () => { location.hash = '#/new'; },
+    };
+
+    if (view === 'dash') {
+      vals.hasForms = s.forms.length > 0; vals.noForms = s.forms.length === 0;
+      vals.formsCountLabel = s.forms.length === 1 ? '1 form' : `${s.forms.length} forms`;
+      vals.formCards = s.forms.map(f => {
+        const rc = s.responses.filter(r => r.formId === f.id).length;
+        return {
+          id: f.id, title: f.title || 'Untitled form', desc: f.description || '',
+          created: this.fmtDate(f.createdAt),
+          meta: `${f.questions.length} question${f.questions.length === 1 ? '' : 's'}`,
+          respLabel: `Responses (${rc})`,
+          menuOpen: s.menuId === f.id,
+          toggleMenu: () => this.setState(st => ({ menuId: st.menuId === f.id ? null : f.id })),
+          fill: () => { location.hash = '#/fill/' + f.id; },
+          edit: () => { location.hash = '#/edit/' + f.id; },
+          responses: () => { location.hash = '#/responses/' + f.id; },
+          copyLink: () => {
+            const url = location.href.split('#')[0] + '#/fill/' + f.id;
+            navigator.clipboard && navigator.clipboard.writeText(url);
+            this.setState({ menuId: null });
+            this.toastMsg('Fill link copied to clipboard');
+          },
+          duplicate: () => {
+            const copy = JSON.parse(JSON.stringify(f));
+            copy.id = this.uid('f'); copy.title = f.title + ' (copy)'; copy.createdAt = Date.now();
+            copy.questions.forEach(q => q.id = this.uid('q'));
+            this.setState(st => ({ forms: [...st.forms, copy], menuId: null }), () => this.persist());
+          },
+          del: () => {
+            if (!confirm(`Delete “${f.title}” and its responses?`)) return;
+            this.setState(st => ({ forms: st.forms.filter(x => x.id !== f.id), responses: st.responses.filter(r => r.formId !== f.id), menuId: null }), () => this.persist());
+          }
+        };
+      });
+    }
+
+    if (view === 'builder' && s.draft) {
+      const d = s.draft;
+      const upd = fn => this.setState(st => { const nd = JSON.parse(JSON.stringify(st.draft)); fn(nd); return { draft: nd }; });
+      vals.builderTitle = d.id ? 'Edit form' : 'New form';
+      vals.draftTitle = d.title; vals.draftDesc = d.description;
+      vals.onDraftTitle = e => upd(nd => { nd.title = e.target.value; });
+      vals.onDraftDesc = e => upd(nd => { nd.description = e.target.value; });
+      const letter = j => String.fromCharCode(65 + j);
+      vals.ratingScales = [{ v: '3', label: '1–3' }, { v: '5', label: '1–5' }, { v: '7', label: '1–7' }, { v: '10', label: '1–10' }];
+      vals.bQuestions = d.questions.map((q, i) => ({
+        num: i + 1, label: q.label, type: q.type, required: q.required,
+        showOptions: ['radio', 'check', 'drop'].includes(q.type),
+        isRating: q.type === 'rating',
+        maxStr: String(q.max || 5),
+        scalePreview: `1–${q.max || 5}`,
+        onMax: e => upd(nd => { nd.questions[i].max = parseInt(e.target.value, 10); }),
+        cardBorder: s.dragOverIdx === i && s.dragIdx !== null && s.dragIdx !== i ? 'var(--accent)' : '#e2e7f0',
+        cardOpacity: s.dragIdx === i ? '0.45' : '1',
+        onDragStart: e => { e.dataTransfer.setData('text/plain', String(i)); e.dataTransfer.effectAllowed = 'move'; this.setState({ dragIdx: i }); },
+        onDragEnd: () => this.setState({ dragIdx: null, dragOverIdx: null }),
+        onDragOver: e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (this.state.dragOverIdx !== i) this.setState({ dragOverIdx: i }); },
+        onDrop: e => {
+          e.preventDefault();
+          const from = this.state.dragIdx;
+          if (from != null && from !== i) upd(nd => { const [m] = nd.questions.splice(from, 1); nd.questions.splice(i, 0, m); });
+          this.setState({ dragIdx: null, dragOverIdx: null });
+        },
+        optRows: (q.options || []).map((o, j) => ({
+          text: o,
+          glyph: q.type === 'drop' ? letter(j) + '.' : (q.type === 'radio' ? '○' : '☐'),
+          ph: 'Option ' + letter(j),
+          onChange: e => upd(nd => { nd.questions[i].options[j] = e.target.value; }),
+          remove: () => upd(nd => { nd.questions[i].options.splice(j, 1); })
+        })),
+        nextOpt: letter((q.options || []).length),
+        addOption: () => upd(nd => { nd.questions[i].options.push(''); }),
+        onLabel: e => upd(nd => { nd.questions[i].label = e.target.value; }),
+        onType: e => upd(nd => {
+          nd.questions[i].type = e.target.value;
+          if (['radio', 'check', 'drop'].includes(e.target.value) && !(nd.questions[i].options || []).length)
+            nd.questions[i].options = ['Option A', 'Option B'];
+          if (e.target.value === 'rating' && !nd.questions[i].max) nd.questions[i].max = 5;
+        }),
+        onRequired: e => upd(nd => { nd.questions[i].required = e.target.checked; }),
+        del: () => upd(nd => { nd.questions.splice(i, 1); })
+      }));
+      vals.addMenuOpen = s.addMenuOpen;
+      vals.toggleAddMenu = () => this.setState(st => ({ addMenuOpen: !st.addMenuOpen }));
+      vals.addBtns = typeOpts.map(t => ({
+        label: t.label,
+        onClick: () => {
+          this.setState({ addMenuOpen: false });
+          upd(nd => {
+            nd.questions.push({ id: this.uid('q'), type: t.v, label: '', required: false, max: t.v === 'rating' ? 5 : undefined, options: ['radio', 'check', 'drop'].includes(t.v) ? ['Option A', 'Option B'] : [] });
+          });
+        }
+      }));
+      vals.genInput = s.genInput;
+      vals.onGenInput = e => this.setState({ genInput: e.target.value });
+      vals.generateForm = () => this.generateForm();
+      vals.genBusy = s.genBusy;
+      vals.genBtnLabel = s.genBusy ? 'Drafting…' : '✦ Draft form with AI';
+      vals.genError = s.genError; vals.hasGenError = !!s.genError;
+      vals.saveDraft = () => {
+        const nd = JSON.parse(JSON.stringify(s.draft));
+        nd.title = nd.title.trim() || 'Untitled form';
+        nd.questions = nd.questions.filter(q => q.label.trim());
+        nd.questions.forEach(q => { q.options = (q.options || []).map(o => o.trim()).filter(Boolean); });
+        if (!nd.id) { nd.id = this.uid('f'); this.setState(st => ({ forms: [...st.forms, nd] }), () => { this.persist(); location.hash = '#/'; }); }
+        else this.setState(st => ({ forms: st.forms.map(f => f.id === nd.id ? nd : f) }), () => { this.persist(); location.hash = '#/'; });
+      };
+    }
+
+    if (view === 'fill') {
+      const form = this.currentForm();
+      vals.submitted = s.submitted; vals.notSubmitted = !s.submitted;
+      vals.fillTitle = form ? form.title : 'Form not found';
+      vals.fillDesc = form ? form.description : ''; vals.hasFillDesc = !!(form && form.description);
+      vals.fillAgain = () => this.applyRoute();
+      const qs = form ? form.questions : [];
+      const answeredCount = qs.filter(q => this.isAnswered(s.fillAnswers[q.id])).length;
+      vals.progressLabel = `${answeredCount} of ${qs.length} answered`;
+      vals.fQuestions = qs.map(q => {
+        const v = s.fillAnswers[q.id];
+        const answered = this.isAnswered(v);
+        const missing = s.missing.includes(q.id);
+        return {
+          id: q.id, label: q.label, required: q.required, answered, missing,
+          borderColor: missing ? '#e08579' : '#e2e7f0',
+          type: q.type,
+          isShort: q.type === 'short', isLong: q.type === 'long', isDate: q.type === 'date',
+          isDrop: q.type === 'drop', isChoice: q.type === 'radio', isCheck: q.type === 'check', isRating: q.type === 'rating',
+          value: v == null ? '' : v,
+          onChange: e => this.setAnswer(q.id, e.target.value),
+          options: (q.options || []).map(o => {
+            const checked = q.type === 'radio' ? v === o : Array.isArray(v) && v.includes(o);
+            return {
+              label: o, checked,
+              borderColor: checked ? 'var(--accent)' : '#e2e7f0',
+              bg: checked ? 'var(--accent-soft)' : '#fff',
+              onToggle: () => q.type === 'radio' ? this.setAnswer(q.id, o) : this.toggleCheck(q.id, o)
+            };
+          }),
+          stars: Array.from({ length: q.max || 5 }, (_, k) => k + 1).map(n => ({
+            n, onClick: () => this.setAnswer(q.id, n),
+            bg: typeof v === 'number' && v >= n ? 'var(--accent)' : '#fff',
+            color: typeof v === 'number' && v >= n ? '#fff' : '#3a4a63',
+            border: typeof v === 'number' && v >= n ? 'var(--accent)' : '#d5dce8'
+          }))
+        };
+      });
+      vals.submitManual = () => {
+        const miss = qs.filter(q => q.required && !this.isAnswered(s.fillAnswers[q.id])).map(q => q.id);
+        if (miss.length) { this.setState({ missing: miss }); this.toastMsg('Please answer the required questions'); return; }
+        this.submitResponse('form');
+      };
+      vals.chatMsgs = s.chat.map(m => ({
+        text: m.text,
+        align: m.role === 'user' ? 'flex-end' : 'flex-start',
+        bg: m.role === 'user' ? 'var(--accent)' : '#fff',
+        color: m.role === 'user' ? '#fff' : '#0e1524',
+        border: m.role === 'user' ? 'var(--accent)' : '#e2e7f0'
+      }));
+      vals.checkItems = qs.map(q => {
+        const done = this.isAnswered(s.fillAnswers[q.id]);
+        const label = q.label.length > 22 ? q.label.slice(0, 21) + '…' : q.label;
+        return {
+          label: label + (q.required ? ' *' : ''),
+          icon: done ? '✓' : '○',
+          bg: done ? 'var(--accent-soft)' : '#f3f5f9',
+          color: done ? 'var(--accent)' : '#7a8699',
+          border: done ? 'var(--accent)' : '#e2e7f0'
+        };
+      });
+      const requiredComplete = qs.filter(q => q.required).every(q => this.isAnswered(s.fillAnswers[q.id]));
+      vals.showAiReady = s.aiReady && requiredComplete && !s.submitted;
+      vals.submitAI = () => this.submitResponse('ai');
+      vals.aiBusy = s.aiBusy;
+      vals.chatInput = s.chatInput;
+      vals.onChatInput = e => this.setState({ chatInput: e.target.value });
+      vals.onChatKey = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.sendChatMsg(); } };
+      vals.sendChat = () => this.sendChatMsg();
+      vals.onUpload = e => this.handleUpload(e);
+    }
+
+    if (view === 'responses') {
+      const form = this.currentForm();
+      const resps = s.responses.filter(r => r.formId === s.route.id).sort((a, b) => b.submittedAt - a.submittedAt);
+      vals.respTitle = form ? form.title + ' — Responses' : 'Form not found';
+      vals.respCountLabel = `${resps.length} response${resps.length === 1 ? '' : 's'}`;
+      vals.hasResponses = resps.length > 0; vals.noResponses = resps.length === 0;
+      const cols = form ? form.questions.slice(0, 4) : [];
+      vals.respGrid = `150px 90px repeat(${Math.max(cols.length, 1)}, 1fr)`;
+      vals.respHeaders = [{ label: 'Submitted' }, { label: 'Via' }, ...cols.map(q => ({ label: q.label }))];
+      const cells = [];
+      resps.forEach(r => {
+        const open = () => this.setState({ detailId: r.id });
+        const sel = s.detailId === r.id;
+        const bg = sel ? 'var(--accent-soft)' : '#fff';
+        cells.push({ text: this.fmtWhen(r.submittedAt), open, bg, color: '#0e1524' });
+        cells.push({ text: r.via === 'ai' ? '🤖 AI' : 'Form', open, bg, color: '#5c6b82' });
+        cols.forEach(q => cells.push({ text: this.valStr(r.answers[q.id]), open, bg, color: '#0e1524' }));
+      });
+      vals.respCells = cells;
+      const det = resps.find(r => r.id === s.detailId);
+      vals.hasDetail = !!det;
+      if (det && form) {
+        vals.detailTitle = `Response · ${this.fmtWhen(det.submittedAt)} · ${det.via === 'ai' ? 'via AI assistant' : 'via form'}`;
+        vals.detailItems = form.questions.map(q => ({ label: q.label, val: this.valStr(det.answers[q.id]) }));
+      }
+      vals.closeDetail = () => this.setState({ detailId: null });
+      vals.copyCurrentLink = () => {
+        const url = location.href.split('#')[0] + '#/fill/' + s.route.id;
+        navigator.clipboard && navigator.clipboard.writeText(url);
+        this.toastMsg('Fill link copied to clipboard');
+      };
+    }
+    return vals;
+  }
+}
+</script>
+</body>
+</html>
