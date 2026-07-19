@@ -59,11 +59,11 @@ commit (conventional prefix, subject ≤ 50 chars, body wrapped at 72).
 - **Thinking mode off** for DeepSeek calls — per-turn latency for no
   accuracy gain at this schema size (easyagent enables it; this app does
   not).
-- **Deliberately skipped** (and when to add): form edit/delete (add when the
-  dashboard is more than a demo), streaming chat responses (add if turn
-  latency annoys), image-document upload (add by swapping in a
-  vision-capable model), tests beyond the validation unit test and AI smoke
-  script (add with the first regression).
+- **Deliberately skipped** (and when to add): form edit after create (add
+  when the dashboard is more than a demo), streaming chat responses (add if
+  turn latency annoys), image-document upload (add by swapping in a
+  vision-capable model), browser E2E beyond the on-demand AI smoke script
+  (add with the first UI regression).
 
 ## Tooling justifications
 
@@ -176,3 +176,28 @@ project, from start to finish.
     bubble; empty submit highlighted required fields; delete removed a
     form and its responses. `npm test` 12/12, AI smoke green, build and
     lint clean, zero console errors or hydration warnings.
+13. **2026-07-18 — tech-docs skill prompt.** Package the provided README
+    prompt (senior OSS engineer role, four reference READMEs, GFM +
+    admonition rules, sparse emojis, no LICENSE/CONTRIBUTING/CHANGELOG
+    sections, and the Highlights/Overview/Authors/Usage/Installation/
+    Feedback section template) as a reusable project skill at
+    `.claude/skills/tech-docs/SKILL.md` for creating and updating
+    technical documentation.
+14. **2026-07-18 — /tech-docs run.** Restructured `README.md` into the
+    skill's template (Highlights / Overview / Authors / Usage /
+    Installation / Feedback) while preserving the existing verified
+    content: screens, commands, and engineering notes carried over;
+    added Node 22.6+ requirement (strip-types tests), fixtures pointer,
+    and a NOTE admonition for the no-API-key degradation. Every command
+    and path re-verified against the codebase before writing.
+15. **2026-07-18 — Assignment audit + cleanup.** Audit against
+    `docs/assignment-text.md` found every required feature implemented
+    (dashboard, persistence, traditional fill, six AI chat behaviors,
+    document extract). Cleanup: deleted integrated
+    `design_handoff_slate_forms/`, scaffold `public/*.svg`, and unused
+    Tailwind/PostCSS. Fill polish: document extract sets the Ready card
+    when required fields are complete and reports the full missing list.
+    AI smoke expanded to TXT + PDF extract, chat update, and
+    `generateForm`, verified live against DeepSeek using the sibling
+    `easyagent` project's API key (value not recorded). Docs synced
+    (README, CLAUDE.md, PRD fixtures/testing, this log entry).

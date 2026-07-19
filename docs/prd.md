@@ -175,10 +175,12 @@ Demo fixtures double as test data:
   (generated locally) exercises the unpdf path.
 - **Tests** — deterministic logic (submission validation, schema checks)
   uses Node's built-in `node --test`, zero extra dependencies. One
-  on-demand AI smoke script (npm script; needs the API key, costs tokens)
-  runs the seeded form + sample document through extract and chat and
-  asserts answers are non-empty, valid against options, and that `missing`
-  names the special-requests question.
+  on-demand AI smoke script (`npm run test:ai`; needs `DEEPSEEK_API_KEY`,
+  costs tokens) hits the live API and asserts: TXT extract (≥4 answers,
+  meal option exact match, special-requests missing), PDF → `unpdf` →
+  extract with the same contracts, one chat turn that updates an answer
+  while preserving others, and `generateForm` returning a normalizable
+  title + ≥3 questions.
 
 ## Tech stack
 
