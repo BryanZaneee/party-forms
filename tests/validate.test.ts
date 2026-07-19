@@ -110,3 +110,18 @@ test("isAnswered treats blanks and empty arrays as unanswered", () => {
   assert.equal(isAnswered("x"), true);
   assert.equal(isAnswered(["x"]), true);
 });
+
+test("multiple_choice validates like dropdown", () => {
+  const qs: Question[] = [
+    { id: "q1", label: "Hear", type: "multiple_choice", options: ["Friend", "Other"], required: true },
+  ];
+  assert.equal(validateAnswers(qs, { q1: "Friend" }).ok, true);
+  assert.deepEqual(validateAnswers(qs, { q1: "Radio" }).invalid, ["q1"]);
+  assert.deepEqual(coerceAnswers(qs, { q1: "friend" }), { q1: "Friend" });
+});
+
+test("rating max variants accept only their scale", () => {
+  const qs: Question[] = [{ id: "q1", label: "Rate", type: "rating", max: 10, required: true }];
+  assert.equal(validateAnswers(qs, { q1: "10" }).ok, true);
+  assert.deepEqual(validateAnswers(qs, { q1: "11" }).invalid, ["q1"]);
+});
