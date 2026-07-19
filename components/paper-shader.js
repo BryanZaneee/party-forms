@@ -1,8 +1,8 @@
 // <paper-shader> — mounts a Paper Shaders (open source, zero-dependency) Dithering canvas.
 // Attributes: color-back, color-front (hex), shape (simplex|warp|dots|wave|ripple|swirl|sphere),
 // type (random|2x2|4x4|8x8), px-size, speed.
-// Ported verbatim from design_handoff_slate_forms/paper-shader.js; only the
-// fallback gradient is re-tinted to the accent. Import client-side only.
+// Paper Shaders dithering canvas; fallback gradient tinted to accent.
+// Import client-side only.
 (function () {
   if (customElements.get("paper-shader")) return;
   const SHAPES = { simplex: 1, warp: 2, dots: 3, wave: 4, ripple: 5, swirl: 6, sphere: 7 };

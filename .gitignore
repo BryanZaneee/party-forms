@@ -43,4 +43,3 @@ next-env.d.ts
 # app data + local env
 data.db*
 !.env.example
-.DS_Store

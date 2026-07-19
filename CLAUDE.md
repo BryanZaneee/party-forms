@@ -26,10 +26,9 @@ tooling rationale, and the append-only decision/prompt log: `docs/roadmap.md`.
 ## Current state
 
 - Complete: backend (5 POST endpoints + DELETE, SQLite via `lib/db.ts`,
-  DeepSeek AI in `lib/ai.ts`) and the full UI, a faithful port of the design
-  handoff in `design_handoff_slate_forms/` (plain inline CSS, no Tailwind
-  usage). Seven question types: text, textarea, multiple_choice, dropdown,
-  checkbox (array answers), rating, date.
+  DeepSeek AI in `lib/ai.ts`) and the full UI (plain inline CSS, no
+  Tailwind). Seven question types: text, textarea, multiple_choice,
+  dropdown, checkbox (array answers), rating, date.
 - Stack: Next.js 16 (App Router) + TypeScript, better-sqlite3 for
   persistence (`data.db`, gitignored), DeepSeek V4 Flash
   (`deepseek-v4-flash`, OpenAI-compatible API, `DEEPSEEK_API_KEY` in
@@ -44,8 +43,8 @@ tooling rationale, and the append-only decision/prompt log: `docs/roadmap.md`.
 - `npm run build` / `npm start` — production build and serve
 - `npm run lint` — ESLint
 - `npm test` — deterministic unit tests (validation), no AI calls
-- `npm run test:ai` — AI smoke test against the seeded fixtures (needs
-  `DEEPSEEK_API_KEY` in `.env.local`, costs tokens)
+- `npm run test:ai` — live AI smoke (TXT + PDF extract, chat update,
+  form generate; needs `DEEPSEEK_API_KEY` in `.env.local`, costs tokens)
 - Every prompt-level request or decision gets appended to the Decision &
   Prompt Log in `docs/roadmap.md`, in chronological order.
 
