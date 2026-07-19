@@ -1,11 +1,21 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Answers, Form, Question } from "@/lib/types";
 import { isAnswered, validateAnswers } from "@/lib/validate";
 import Hero from "./Hero";
 import Toast from "./Toast";
+
+interface ChatMsg {
+  role: "user" | "assistant";
+  text: string;
+}
+
+const greeting = (form: Form): ChatMsg => ({
+  role: "assistant",
+  text: `Hi! I can help you fill out “${form.title}”. Tell me your answers in your own words, or upload a document and I'll pull out what I can. What would you like to start with?`,
+});
 
 const controlStyle: React.CSSProperties = {
   fontSize: 14,
@@ -19,8 +29,18 @@ export default function FillClient({ form }: { form: Form }) {
   const [missing, setMissing] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [chat, setChat] = useState<ChatMsg[]>([greeting(form)]);
+  const [chatInput, setChatInput] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiReady, setAiReady] = useState(false);
   const [toast, setToast] = useState("");
   const toastT = useRef<ReturnType<typeof setTimeout>>(null);
+  const chatScroll = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = chatScroll.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [chat, aiBusy]);
 
   const toastMsg = (t: string) => {
     setToast(t);
@@ -43,6 +63,39 @@ export default function FillClient({ form }: { form: Form }) {
     setAnswers({});
     setMissing([]);
     setSubmitted(false);
+    setChat([greeting(form)]);
+    setChatInput("");
+    setAiBusy(false);
+    setAiReady(false);
+  };
+
+  const sendChat = async () => {
+    const text = chatInput.trim();
+    if (!text || aiBusy) return;
+    const nextChat: ChatMsg[] = [...chat, { role: "user", text }];
+    setChat(nextChat);
+    setChatInput("");
+    setAiBusy(true);
+    try {
+      const res = await fetch(`/api/forms/${form.id}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: nextChat.map((m) => ({ role: m.role, content: m.text })),
+          answers,
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error);
+      // Server returns the full merged answers object — replace, don't merge.
+      setAnswers(body.answers);
+      setMissing((m) => m.filter((id) => !isAnswered(body.answers[id])));
+      setChat((c) => [...c, { role: "assistant", text: body.reply }]);
+      setAiReady((r) => r || body.ready_to_submit === true);
+    } catch {
+      setChat((c) => [...c, { role: "assistant", text: "Sorry, I hit an error reaching the AI. Please try again." }]);
+    }
+    setAiBusy(false);
   };
 
   const submit = async (via: "form" | "ai") => {
@@ -190,6 +243,166 @@ export default function FillClient({ form }: { form: Form }) {
             >
               Submit response
             </button>
+          </div>
+
+          <div
+            style={{
+              flex: 1,
+              minWidth: 330,
+              position: "sticky",
+              top: 16,
+              background: "#fff",
+              border: "1px solid #e2e7f0",
+              borderRadius: 14,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              boxShadow: "0 6px 24px rgba(10,20,50,.07)",
+            }}
+          >
+            <div
+              style={{ padding: "14px 18px", borderBottom: "1px solid #edf0f6", display: "flex", alignItems: "center", gap: 9 }}
+            >
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)" }} />
+              <div style={{ fontSize: 14, fontWeight: 600 }}>AI assistant</div>
+              <div style={{ fontSize: 12, color: "#7a8699" }}>answers fill in live</div>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "10px 16px", borderBottom: "1px solid #edf0f6" }}>
+              {form.questions.map((q) => {
+                const done = isAnswered(answers[q.id]);
+                const label = q.label.length > 22 ? q.label.slice(0, 21) + "…" : q.label;
+                return (
+                  <div
+                    key={q.id}
+                    style={{
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      padding: "4px 9px",
+                      borderRadius: 99,
+                      background: done ? "var(--accent-soft)" : "#f3f5f9",
+                      color: done ? "var(--accent)" : "#7a8699",
+                      border: `1px solid ${done ? "var(--accent)" : "#e2e7f0"}`,
+                    }}
+                  >
+                    {done ? "✓" : "○"} {label}
+                    {q.required ? " *" : ""}
+                  </div>
+                );
+              })}
+            </div>
+            <div
+              ref={chatScroll}
+              style={{
+                height: 380,
+                overflowY: "auto",
+                padding: "16px 18px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+                background: "#f8fafd",
+              }}
+            >
+              {chat.map((m, i) => (
+                <div
+                  key={i}
+                  style={{
+                    alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+                    maxWidth: "85%",
+                    background: m.role === "user" ? "var(--accent)" : "#fff",
+                    color: m.role === "user" ? "#fff" : "#0e1524",
+                    border: `1px solid ${m.role === "user" ? "var(--accent)" : "#e2e7f0"}`,
+                    borderRadius: 12,
+                    padding: "9px 13px",
+                    fontSize: 13.5,
+                    lineHeight: 1.5,
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {m.text}
+                </div>
+              ))}
+              {aiBusy && (
+                <div style={{ alignSelf: "flex-start", color: "#7a8699", fontSize: 13, padding: "4px 2px" }}>
+                  <span style={{ animation: "blink 1.2s infinite" }}>●</span>{" "}
+                  <span style={{ animation: "blink 1.2s .2s infinite" }}>●</span>{" "}
+                  <span style={{ animation: "blink 1.2s .4s infinite" }}>●</span>
+                </div>
+              )}
+            </div>
+            {aiReady && validateAnswers(form.questions, answers).missing.length === 0 && (
+              <div
+                style={{
+                  margin: "12px 14px 12px",
+                  border: "1px solid var(--accent)",
+                  background: "var(--accent-soft)",
+                  borderRadius: 11,
+                  padding: "13px 15px",
+                }}
+              >
+                <div style={{ fontSize: 13.5, fontWeight: 600 }}>Ready to submit</div>
+                <div style={{ fontSize: 12.5, color: "#3a4a63", marginTop: 3, lineHeight: 1.45 }}>
+                  All required questions are answered. Review the summary above and your answers on the left — the AI never
+                  submits for you.
+                </div>
+                <button
+                  onClick={() => submit("ai")}
+                  disabled={submitting}
+                  style={{
+                    marginTop: 10,
+                    background: "var(--accent)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "9px 16px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Submit response
+                </button>
+              </div>
+            )}
+            <div style={{ padding: "12px 14px", borderTop: "1px solid #edf0f6", display: "flex", flexDirection: "column", gap: 9 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <textarea
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendChat();
+                    }
+                  }}
+                  placeholder="Answer naturally, e.g. “I'm Maya, I'll be there May 12”"
+                  rows={2}
+                  style={{
+                    flex: 1,
+                    fontSize: 13.5,
+                    border: "1px solid #d5dce8",
+                    borderRadius: 9,
+                    padding: "9px 11px",
+                    resize: "none",
+                  }}
+                />
+                <button
+                  onClick={sendChat}
+                  disabled={aiBusy}
+                  style={{
+                    background: "var(--accent)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 9,
+                    padding: "0 16px",
+                    fontSize: 13.5,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Send
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
