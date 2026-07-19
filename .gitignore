@@ -12,11 +12,9 @@
 
 # testing
 /coverage
-/test-results/
 /playwright-report/
 /blob-report/
-/tests/ai/last-run-metrics.json
-/e2e/.auth/
+/tests/last-run-metrics.json
 
 # next.js
 /.next/

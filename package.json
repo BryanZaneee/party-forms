@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test --test-concurrency=1 tests/*.test.ts tests/api/*.test.ts tests/regression/*.test.ts",
-    "test:ai": "node --experimental-strip-types --env-file-if-exists=.env.local --test --test-concurrency=1 tests/ai/live.test.ts",
+    "test": "node --experimental-strip-types --test --test-concurrency=1 tests/*.test.ts",
+    "test:ai": "node --experimental-strip-types --env-file-if-exists=.env.local --test --test-concurrency=1 tests/ai-live.ts",
     "test:e2e": "playwright test",
     "test:ai:e2e": "AI_E2E=1 playwright test --grep @ai",
     "test:all": "npm test && npm run test:e2e && npm run test:ai && npm run test:ai:e2e"

@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { coerceAnswers, normalizeQuestions, validateAnswers } from "../../lib/validate.ts";
-import { readUploadText } from "../../lib/upload.ts";
+import { coerceAnswers, normalizeQuestions, validateAnswers } from "../lib/validate.ts";
+import { readUploadText } from "../lib/upload.ts";
 
 const dir = mkdtempSync(path.join(tmpdir(), "party-te-api-"));
 process.env.PARTY_TE_DB = path.join(dir, "api.db");
@@ -19,7 +19,7 @@ const {
   deleteForm,
   createSubmission,
   listSubmissions,
-} = await import("../../lib/db.ts");
+} = await import("../lib/db.ts");
 
 test.after(() => {
   resetDbForTests();
@@ -67,7 +67,7 @@ test("delete cascades like DELETE /api/forms/[id]", () => {
 });
 
 test("AI helpers throw without API key (routes map to 503)", async () => {
-  const { chatTurn, generateForm, draftFormTurn } = await import("../../lib/ai.ts");
+  const { chatTurn, generateForm, draftFormTurn } = await import("../lib/ai.ts");
   const form = listForms()[0];
   await assert.rejects(() => chatTurn(form, [{ role: "user", content: "hi" }], {}), /DEEPSEEK_API_KEY/);
   await assert.rejects(() => generateForm("RSVP"), /DEEPSEEK_API_KEY/);

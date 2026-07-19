@@ -98,7 +98,7 @@ first run).
   case-insensitively against the defined options and drops anything
   unmatched; `ready_to_submit` is re-gated server-side on actual required
   completeness.
-- Live AI metrics land in `tests/ai/last-run-metrics.json` (gitignored).
+- Live AI metrics land in `tests/last-run-metrics.json` (gitignored).
 
 ## 💭 Feedback and Contributing
 

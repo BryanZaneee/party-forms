@@ -1,5 +1,5 @@
-import type { AnswerValue, Answers, Question } from "../../lib/types.ts";
-import { isAnswered } from "../../lib/validate.ts";
+import type { AnswerValue, Answers, Question } from "../lib/types.ts";
+import { isAnswered } from "../lib/validate.ts";
 
 function normText(v: string): string {
   return v.trim().toLowerCase().replace(/[^\w\s/-]/g, "").replace(/\s+/g, " ");

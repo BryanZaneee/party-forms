@@ -6,7 +6,10 @@ import { tmpdir } from "node:os";
 const e2eDb = path.join(mkdtempSync(path.join(tmpdir(), "party-te-e2e-")), "e2e.db");
 
 export default defineConfig({
-  testDir: "e2e",
+  testDir: "tests",
+  testMatch: /.*\.spec\.ts/,
+  // Keep Playwright artifacts out of the repo (no root test-results/ folder).
+  outputDir: path.join(tmpdir(), "party-te-playwright-output"),
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0,

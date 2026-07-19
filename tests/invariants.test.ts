@@ -3,13 +3,13 @@ import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { coerceAnswers, normalizeQuestions, validateAnswers } from "../../lib/validate.ts";
-import type { Answers, Question } from "../../lib/types.ts";
+import { coerceAnswers, normalizeQuestions, validateAnswers } from "../lib/validate.ts";
+import type { Answers, Question } from "../lib/types.ts";
 
 const dir = mkdtempSync(path.join(tmpdir(), "party-te-reg-"));
 process.env.PARTY_TE_DB = path.join(dir, "reg.db");
 
-const { SEED_QUESTIONS, listForms, resetDbForTests } = await import("../../lib/db.ts");
+const { SEED_QUESTIONS, listForms, resetDbForTests } = await import("../lib/db.ts");
 
 test.after(() => {
   resetDbForTests();

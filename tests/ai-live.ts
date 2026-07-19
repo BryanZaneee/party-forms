@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import {
   aiCallMetrics,
@@ -9,11 +9,11 @@ import {
   draftFormTurn,
   extractAnswers,
   generateForm,
-} from "../../lib/ai.ts";
-import { formatSuiteCostLine, rollupSuiteTotals } from "../../lib/ai-metrics.ts";
-import { listForms } from "../../lib/db.ts";
-import { normalizeQuestions } from "../../lib/validate.ts";
-import { scoreAnswers } from "./score.ts";
+} from "../lib/ai.ts";
+import { formatSuiteCostLine, rollupSuiteTotals } from "../lib/ai-metrics.ts";
+import { listForms } from "../lib/db.ts";
+import { normalizeQuestions } from "../lib/validate.ts";
+import { scoreAnswers } from "./ai-score.ts";
 
 if (!process.env.DEEPSEEK_API_KEY) {
   throw new Error("DEEPSEEK_API_KEY required for npm run test:ai (opt-in live suite)");
@@ -106,9 +106,7 @@ test.after(() => {
     calls: aiCallMetrics,
     suite_totals: totals,
   };
-  const outDir = path.join("tests", "ai");
-  mkdirSync(outDir, { recursive: true });
-  writeFileSync(path.join(outDir, "last-run-metrics.json"), JSON.stringify(report, null, 2));
+  writeFileSync(path.join("tests", "last-run-metrics.json"), JSON.stringify(report, null, 2));
   console.log("\n--- Live AI metrics ---");
   for (const c of aiCallMetrics) {
     console.log(
