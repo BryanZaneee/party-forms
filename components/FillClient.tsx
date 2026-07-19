@@ -137,13 +137,17 @@ export default function FillClient({ form }: { form: Form }) {
       const merged = { ...answers, ...body.answers };
       setAnswers(merged);
       setMissing((m) => m.filter((id) => !isAnswered(merged[id])));
+      const check = validateAnswers(form.questions, merged);
+      if (check.missing.length === 0) setAiReady(true);
       const found = form.questions.filter((q) => q.id in body.answers).map((q) => q.label);
-      const stillMissing = form.questions.filter((q) => q.required && !isAnswered(merged[q.id])).map((q) => q.label);
+      const missingIds: string[] = Array.isArray(body.missing) ? body.missing : check.missing;
+      const labelById = new Map(form.questions.map((q) => [q.id, q.label]));
+      const stillMissing = missingIds.map((id) => labelById.get(id) ?? id);
       const summary = found.length
         ? `I read “${file.name}” and filled in: ${found.join(", ")}.` +
           (stillMissing.length
             ? ` Still missing: ${stillMissing.join(", ")}.`
-            : " All required questions are answered — review your answers and submit when ready.")
+            : " Everything is filled in — review your answers and submit when ready.")
         : `I couldn't find any answers in “${file.name}”.` +
           (stillMissing.length ? ` Still missing: ${stillMissing.join(", ")}.` : "");
       setChat((c) => [...c, { role: "assistant", text: summary }]);
