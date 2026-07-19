@@ -10,6 +10,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS forms (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
     questions TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
@@ -17,9 +18,16 @@ db.exec(`
     id TEXT PRIMARY KEY,
     form_id TEXT NOT NULL REFERENCES forms(id),
     answers TEXT NOT NULL,
+    via TEXT NOT NULL DEFAULT 'form',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `);
+
+// Guarded migrations for databases created before these columns existed.
+const hasColumn = (table: string, column: string) =>
+  (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).some((c) => c.name === column);
+if (!hasColumn("forms", "description")) db.exec("ALTER TABLE forms ADD COLUMN description TEXT NOT NULL DEFAULT ''");
+if (!hasColumn("submissions", "via")) db.exec("ALTER TABLE submissions ADD COLUMN via TEXT NOT NULL DEFAULT 'form'");
 
 // Seed doubles as demo data and AI-test fixture (docs/prd.md, Fixtures & testing).
 const SEED_QUESTIONS: Question[] = [
@@ -32,9 +40,10 @@ const SEED_QUESTIONS: Question[] = [
 ];
 
 if ((db.prepare("SELECT COUNT(*) AS n FROM forms").get() as { n: number }).n === 0) {
-  db.prepare("INSERT INTO forms (id, title, questions) VALUES (?, ?, ?)").run(
+  db.prepare("INSERT INTO forms (id, title, description, questions) VALUES (?, ?, ?, ?)").run(
     randomUUID(),
     "Event Booking Request",
+    "Tell us about your event so we can prepare a booking.",
     JSON.stringify(SEED_QUESTIONS)
   );
 }
@@ -58,10 +67,22 @@ export function getForm(id: string): Form | undefined {
   return row && { ...row, questions: JSON.parse(row.questions) };
 }
 
-export function createForm(title: string, questions: Question[]): string {
+export function createForm(title: string, questions: Question[], description = ""): string {
   const id = randomUUID();
-  db.prepare("INSERT INTO forms (id, title, questions) VALUES (?, ?, ?)").run(id, title, JSON.stringify(questions));
+  db.prepare("INSERT INTO forms (id, title, description, questions) VALUES (?, ?, ?, ?)").run(
+    id,
+    title,
+    description,
+    JSON.stringify(questions)
+  );
   return id;
+}
+
+export function deleteForm(id: string): boolean {
+  return db.transaction(() => {
+    db.prepare("DELETE FROM submissions WHERE form_id = ?").run(id);
+    return db.prepare("DELETE FROM forms WHERE id = ?").run(id).changes > 0;
+  })();
 }
 
 export function listSubmissions(formId: string): Submission[] {
@@ -71,12 +92,13 @@ export function listSubmissions(formId: string): Submission[] {
   return rows.map((r) => ({ ...r, answers: JSON.parse(r.answers) }));
 }
 
-export function createSubmission(formId: string, answers: Answers): string {
+export function createSubmission(formId: string, answers: Answers, via: "form" | "ai" = "form"): string {
   const id = randomUUID();
-  db.prepare("INSERT INTO submissions (id, form_id, answers) VALUES (?, ?, ?)").run(
+  db.prepare("INSERT INTO submissions (id, form_id, answers, via) VALUES (?, ?, ?, ?)").run(
     id,
     formId,
-    JSON.stringify(answers)
+    JSON.stringify(answers),
+    via
   );
   return id;
 }

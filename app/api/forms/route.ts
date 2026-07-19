@@ -5,6 +5,7 @@ import { normalizeQuestions } from "@/lib/validate";
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const title = typeof body?.title === "string" ? body.title.trim() : "";
+  const description = typeof body?.description === "string" ? body.description.trim() : "";
   const questions = normalizeQuestions(body?.questions);
   if (!title || !questions) {
     return NextResponse.json(
@@ -12,5 +13,5 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  return NextResponse.json({ id: createForm(title, questions) }, { status: 201 });
+  return NextResponse.json({ id: createForm(title, questions, description) }, { status: 201 });
 }

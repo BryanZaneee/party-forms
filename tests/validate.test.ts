@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeQuestions, validateAnswers } from "../lib/validate.ts";
+import { coerceAnswers, isAnswered, normalizeQuestions, validateAnswers } from "../lib/validate.ts";
 import type { Question } from "../lib/types.ts";
 
 const questions: Question[] = [
@@ -53,4 +53,60 @@ test("normalizeQuestions rejects unusable input", () => {
   assert.equal(normalizeQuestions([{ label: "" }]), null);
   assert.equal(normalizeQuestions([{ label: "Meal", type: "dropdown", options: ["only-one"] }]), null);
   assert.equal(normalizeQuestions("nope"), null);
+});
+
+const extQuestions: Question[] = [
+  { id: "q1", label: "Toppings", type: "checkbox", options: ["Cheese", "Olives", "Ham"], required: true },
+  { id: "q2", label: "Rating", type: "rating", max: 5, required: true },
+  { id: "q3", label: "Date", type: "date", required: false },
+];
+
+test("checkbox validation: subset ok, unmatched invalid, empty array missing", () => {
+  assert.equal(validateAnswers(extQuestions, { q1: ["Cheese", "Ham"], q2: "4" }).ok, true);
+  assert.deepEqual(validateAnswers(extQuestions, { q1: ["Cheese", "Pineapple"], q2: "4" }).invalid, ["q1"]);
+  assert.deepEqual(validateAnswers(extQuestions, { q1: [], q2: "4" }).missing, ["q1"]);
+});
+
+test("rating validation: in-range string ok, out of range or junk invalid", () => {
+  assert.equal(validateAnswers(extQuestions, { q1: ["Cheese"], q2: "5" }).ok, true);
+  assert.deepEqual(validateAnswers(extQuestions, { q1: ["Cheese"], q2: "6" }).invalid, ["q2"]);
+  assert.deepEqual(validateAnswers(extQuestions, { q1: ["Cheese"], q2: "abc" }).invalid, ["q2"]);
+});
+
+test("date validation requires YYYY-MM-DD", () => {
+  assert.equal(validateAnswers(extQuestions, { q1: ["Cheese"], q2: "3", q3: "2026-08-02" }).ok, true);
+  assert.deepEqual(validateAnswers(extQuestions, { q1: ["Cheese"], q2: "3", q3: "Aug 2" }).invalid, ["q3"]);
+});
+
+test("normalizeQuestions handles checkbox and rating", () => {
+  assert.equal(normalizeQuestions([{ label: "Pick", type: "checkbox", options: ["a"] }]), null);
+  const qs = normalizeQuestions([
+    { label: "Pick", type: "checkbox", options: ["a", "b"] },
+    { label: "Rate", type: "rating", max: 7 },
+    { label: "Rate odd", type: "rating", max: 4 },
+    { label: "Rate none", type: "rating" },
+  ]);
+  assert.ok(qs);
+  assert.deepEqual(qs[0].options, ["a", "b"]);
+  assert.deepEqual(qs.slice(1).map((q) => q.max), [7, 5, 5]);
+});
+
+test("coerceAnswers matches options case-insensitively and drops junk", () => {
+  const a = coerceAnswers(extQuestions, {
+    q1: ["cheese", "HAM", "pineapple"],
+    q2: 4.4,
+    q3: "2026-08-02",
+    qX: "unknown id",
+  });
+  assert.deepEqual(a, { q1: ["Cheese", "Ham"], q2: "4", q3: "2026-08-02" });
+  // lone string wrapped for checkbox; out-of-range rating and bad date dropped
+  assert.deepEqual(coerceAnswers(extQuestions, { q1: "olives", q2: 9, q3: "next friday" }), { q1: ["Olives"] });
+});
+
+test("isAnswered treats blanks and empty arrays as unanswered", () => {
+  assert.equal(isAnswered(undefined), false);
+  assert.equal(isAnswered("  "), false);
+  assert.equal(isAnswered([]), false);
+  assert.equal(isAnswered("x"), true);
+  assert.equal(isAnswered(["x"]), true);
 });

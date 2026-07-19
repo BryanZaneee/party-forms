@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { chatTurn } from "@/lib/ai";
 import { getForm } from "@/lib/db";
-import type { Answers } from "@/lib/types";
+import { coerceAnswers } from "@/lib/validate";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,12 +19,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "messages array required" }, { status: 400 });
   }
 
-  const current: Answers = {};
-  if (body?.answers && typeof body.answers === "object") {
-    for (const q of form.questions) {
-      if (typeof body.answers[q.id] === "string") current[q.id] = body.answers[q.id];
-    }
-  }
+  const current = coerceAnswers(form.questions, body?.answers);
 
   try {
     return NextResponse.json(await chatTurn(form, history, current));

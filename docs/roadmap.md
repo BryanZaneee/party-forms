@@ -146,3 +146,19 @@ project, from start to finish.
     submissions survive a server restart. `npm test` 6/6, `npm run
     test:ai` green, production build clean. UI pages remain (Claude
     Design).
+11. **2026-07-18 — Design handoff integration prompt.** The designed UI
+    arrived in `design_handoff_slate_forms/` (README spec, high-fidelity
+    prototype, hero shader); integrate it with the built backend, keeping
+    ponytail active without sacrificing usability. Decisions (Q&A): extend
+    the backend to all seven designed question types — `checkbox` (answers
+    become `string | string[]`), `rating` (string "1"..max, max ∈
+    3/5/7/10), `date` (YYYY-MM-DD) — keeping the existing four type names
+    since seeded data and tests use them; dashboard overflow menu ships
+    Copy share link + Delete only (new `DELETE /api/forms/[id]`), no
+    Edit/Duplicate (not in the assignment); forms gain a `description`
+    column and submissions a `via` ('form' | 'ai') column via guarded
+    ALTER TABLE migrations; styling ports the prototype's inline CSS
+    faithfully (no Tailwind rewrite, no new deps); uploads accept the
+    backend contract (.pdf/.txt/.md). A single `coerceAnswers` sanitizer
+    (ported from the prototype's coerce(): case-insensitive option match,
+    drop-never-guess) now serves the AI, chat, and submissions routes.
