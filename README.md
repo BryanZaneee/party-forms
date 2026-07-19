@@ -16,20 +16,18 @@
 ## ℹ️ Overview
 
 Party Forms is an AI-powered form builder built as a take-home assignment
-(~2–3 hour scope, spec in `docs/assignment-text.md`). Form creators get a
+(~2–3 hour scope). Form creators get a
 dashboard to create forms and review responses; respondents get a shareable
 link where they can answer with familiar form controls or chat with an AI
 assistant that extracts answers from natural language, tracks what's
 answered, asks for missing required fields, and shows a summary before
 submission — it never submits on its own.
 
-Product design lives in `docs/prd.md`; the full build order and append-only
-Decision & Prompt Log are in `docs/roadmap.md`. The UI uses plain inline CSS
-(no Tailwind).
+The UI uses plain inline CSS (no Tailwind).
 
 ## ✍️ Authors
 
-Bryan Zane.
+[Bryan Zane](https://github.com/BryanZaneee).
 
 ## 🚀 Usage
 
@@ -103,5 +101,5 @@ first run).
 ## 💭 Feedback and Contributing
 
 This is a take-home assignment, so there's no formal contribution process —
-questions and feedback are welcome as GitHub issues. Start with
-`docs/roadmap.md` for the reasoning behind every decision.
+questions and feedback are welcome as
+[GitHub issues](https://github.com/BryanZaneee/party-TE/issues).
