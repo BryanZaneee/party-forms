@@ -47,6 +47,9 @@ export default function Builder() {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
+  const [genInput, setGenInput] = useState("");
+  const [genBusy, setGenBusy] = useState(false);
+  const [genError, setGenError] = useState("");
   const [toast, setToast] = useState("");
   const toastT = useRef<ReturnType<typeof setTimeout>>(null);
 
@@ -72,6 +75,41 @@ export default function Builder() {
         options: OPTION_TYPES.includes(type) ? ["Option A", "Option B"] : [],
       },
     ]);
+  };
+
+  const generate = async () => {
+    const desc = genInput.trim();
+    if (!desc || genBusy) return;
+    setGenBusy(true);
+    setGenError("");
+    try {
+      const res = await fetch("/api/forms/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: desc }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body?.error);
+      if (!title.trim() && body.title) setTitle(body.title);
+      if (!description.trim() && body.description) setDescription(body.description);
+      setQuestions((qs) => [
+        ...qs,
+        ...(body.questions as { label: string; type: QuestionType; options?: string[]; max?: number; required: boolean }[]).map(
+          (q) => ({
+            key: crypto.randomUUID(),
+            label: q.label,
+            type: q.type,
+            options: q.options ?? [],
+            max: q.max,
+            required: q.required,
+          })
+        ),
+      ]);
+      setGenInput("");
+    } catch (err) {
+      setGenError(err instanceof Error && err.message ? err.message : "AI drafting failed — please try again.");
+    }
+    setGenBusy(false);
   };
 
   const save = async () => {
@@ -415,6 +453,56 @@ export default function Builder() {
               Cancel
             </Link>
           </div>
+        </div>
+
+        <div
+          style={{
+            flex: 1,
+            minWidth: 300,
+            position: "sticky",
+            top: 16,
+            background: "#fff",
+            border: "1px solid #e2e7f0",
+            borderRadius: 14,
+            padding: 20,
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+            boxShadow: "0 6px 24px rgba(10,20,50,.07)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)" }} />
+            <div style={{ fontSize: 14, fontWeight: 600 }}>Draft with AI</div>
+          </div>
+          <div style={{ fontSize: 13, color: "#5c6b82", lineHeight: 1.5 }}>
+            Describe the form you need — AI drafts a title, description and questions that prefill the builder rows for you to
+            review and edit before saving.
+          </div>
+          <textarea
+            value={genInput}
+            onChange={(e) => setGenInput(e.target.value)}
+            rows={4}
+            placeholder="e.g. An event booking request form: name, event date, guest count, meal preference, special requests…"
+            style={{ fontSize: 13.5, border: "1px solid #d5dce8", borderRadius: 9, padding: "10px 12px", resize: "vertical" }}
+          />
+          <button
+            onClick={generate}
+            disabled={genBusy}
+            style={{
+              background: "var(--accent)",
+              color: "#fff",
+              border: "none",
+              borderRadius: 9,
+              padding: "11px 16px",
+              fontSize: 13.5,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            {genBusy ? "Drafting…" : "✦ Draft form with AI"}
+          </button>
+          {genError && <div style={{ fontSize: 12.5, color: "#c0392b" }}>{genError}</div>}
         </div>
       </div>
       <Toast text={toast} />
