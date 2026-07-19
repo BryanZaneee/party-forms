@@ -1,0 +1,10 @@
+{
+  "answers": {
+    "q1": "Bryan Zane",
+    "q2": "August 2nd, 2026",
+    "q3": "25",
+    "q4": "Vegan"
+  },
+  "missing": ["q5"],
+  "notes": "Score hard fields q1/q3/q4; q2 soft-matched for August/2026. q5 must be missing. q6 (Friend) is optional bonus, not scored."
+}

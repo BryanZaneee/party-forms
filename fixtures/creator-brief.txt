@@ -1,0 +1,5 @@
+We need a short company picnic RSVP:
+- Guest full name (required)
+- Are you attending? yes/no
+- Meal choice: burger, salad, or vegan bowl
+- Any dietary notes (optional)

@@ -12,6 +12,11 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/tests/ai/last-run-metrics.json
+/e2e/.auth/
 
 # next.js
 /.next/
@@ -43,3 +48,6 @@ next-env.d.ts
 # app data + local env
 data.db*
 !.env.example
+
+# local planning / assignment docs (keep on disk, not in the repo)
+/docs/
