@@ -2,12 +2,12 @@
 
 ## 🌟 Highlights
 
-- Build forms on a dashboard with seven question types, drag reorder, and an
-  AI panel that drafts the whole form from one description
-- Share a fill link — respondents use traditional controls, a conversational
-  AI assistant, or both, backed by one shared answers state
-- Upload a document (`.pdf`/`.txt`/`.md`) and the AI extracts answers and
-  reports what's still missing
+- Build forms on a dashboard with seven question types, drag reorder, and a
+  creator agent that drafts or refines the schema from chat or a brief
+- Share a fill link — respondents use traditional controls, a filler agent
+  chat, or both, backed by one shared answers state
+- Upload a document (`.pdf`/`.txt`/`.md`); the filler agent extracts answers
+  with a paper-shader reveal and reports what's still missing
 - Everything persists in a single SQLite file; no external services except
   the AI API
 - AI output is never trusted: answers are validated and coerced against the
@@ -71,23 +71,34 @@ first run).
 
 - `npm run dev` — dev server (Turbopack)
 - `npm run build` / `npm start` — production build and serve
-- `npm test` — deterministic unit tests (validation/coercion, no AI calls)
-- `npm run test:ai` — live AI smoke: TXT + PDF extract, chat answer
-  update, and form generate against the seeded fixtures (needs
-  `DEEPSEEK_API_KEY`, costs tokens)
+- `npm test` — deterministic unit, API/lib integration, and regression
+  tests (no AI calls, `$0` cost)
+- `npm run test:e2e` — Playwright browser tests on port 3001 (AI routes
+  stubbed or skipped; needs `npx playwright install chromium` once)
+- `npm run test:ai` — opt-in live DeepSeek suite: extract/chat/generate/
+  creator draft against fixtures with a scorable rubric; prints TTFT,
+  tokens/s, tokens, per-call cost, and **suite total cost** (needs
+  `DEEPSEEK_API_KEY`, never mocks model output)
+- `npm run test:ai:e2e` — opt-in live AI Playwright (`AI_E2E=1`)
+- `npm run test:all` — `test` → `test:e2e` → `test:ai` → `test:ai:e2e`
 - `npm run lint` — ESLint
 
 ### Engineering notes
 
 - **Stack**: Next.js 16 (App Router) + TypeScript, better-sqlite3, DeepSeek
-  V4 Flash via the OpenAI-compatible API (JSON mode, one validation retry).
+  V4 Flash via the OpenAI-compatible API (JSON mode, streaming for TTFT
+  metrics, one validation retry).
+- **Dual agents**: creator agent on `/new` (`POST /api/forms/draft`, chat +
+  brief upload) drafts the schema; filler agent on `/fill/[id]` chats and
+  extracts from documents, with a paper-shader stagger reveal into fields.
 - **Reads** happen in server components straight from `lib/db.ts`; **writes**
-  go through five POST endpoints plus one DELETE. `lib/validate.ts` is the
-  single source of truth for answer validity on both server and client.
+  go through API routes. `lib/validate.ts` is the single source of truth for
+  answer validity on both server and client.
 - AI output is never trusted: `coerceAnswers` matches options
   case-insensitively against the defined options and drops anything
   unmatched; `ready_to_submit` is re-gated server-side on actual required
   completeness.
+- Live AI metrics land in `tests/ai/last-run-metrics.json` (gitignored).
 
 ## 💭 Feedback and Contributing
 

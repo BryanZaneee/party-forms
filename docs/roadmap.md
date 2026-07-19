@@ -16,6 +16,13 @@ commit (conventional prefix, subject ≤ 50 chars, body wrapped at 72).
 | M6 | `feat: add document upload with AI extraction` | Upload control + `/api/forms/[id]/extract`, `fixtures/sample-document.txt` + PDF twin, AI smoke script |
 | M7 | `feat: add AI form generation to dashboard` | "Describe your form" box + `/api/forms/generate`, prefills builder rows |
 | M8 | `docs: add README with setup instructions` | README, CLAUDE.md run/build commands |
+| M9 | `test: add db seam and unit coverage` | `PARTY_TE_DB`, validate/db/pdf/metrics/reveal unit tests |
+| M10 | `feat: meter AI calls for live tests` | Streaming TTFT, usage/cost helpers, suite rollup |
+| M11 | `test: add API and regression suites` | Temp-DB lib integration + regression invariants |
+| M12 | `feat: add dual-agent UX and reveal` | Creator draft agent + filler paper-shader extract reveal |
+| M13 | `test: add Playwright e2e coverage` | Deterministic E2E on :3001 + optional `@ai` |
+| M14 | `test: add opt-in live AI scorer` | Fixtures, scorer, suite total cost, `test:all` |
+| M15 | `docs: document testing and agents` | README, PRD fixtures/testing, this log |
 
 ## Functionality, prioritization, engineering decisions
 
@@ -201,3 +208,13 @@ project, from start to finish.
     `generateForm`, verified live against DeepSeek using the sibling
     `easyagent` project's API key (value not recorded). Docs synced
     (README, CLAUDE.md, PRD fixtures/testing, this log entry).
+16. **2026-07-18 — Comprehensive test suite + dual-agent UX.** Added
+    `PARTY_TE_DB` test seam; unit/API/regression suites (`npm test`, 32
+    cases); AI metering (TTFT via stream, tokens, USD cost, suite total);
+    opt-in `npm run test:ai` scorer (no mocked completions) +
+    `test:e2e` / `test:ai:e2e` / `test:all`. Creator agent
+    (`POST /api/forms/draft` + builder chat/upload) and filler agent
+    paper-shader extract reveal. Note: requested Fable 5 *high* for the
+    agent/animation workstream was not available as a Cursor subagent
+    model (only `claude-fable-5-thinking-medium`); that UX was
+    implemented on the main agent instead.

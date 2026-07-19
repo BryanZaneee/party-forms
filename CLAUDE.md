@@ -42,9 +42,11 @@ tooling rationale, and the append-only decision/prompt log: `docs/roadmap.md`.
 - `npm run dev` — dev server (Turbopack) at http://localhost:3000
 - `npm run build` / `npm start` — production build and serve
 - `npm run lint` — ESLint
-- `npm test` — deterministic unit tests (validation), no AI calls
-- `npm run test:ai` — live AI smoke (TXT + PDF extract, chat update,
-  form generate; needs `DEEPSEEK_API_KEY` in `.env.local`, costs tokens)
+- `npm test` — deterministic unit/API/regression tests, no AI calls
+- `npm run test:e2e` — Playwright (port 3001)
+- `npm run test:ai` — opt-in live DeepSeek scorer + suite total cost
+- `npm run test:ai:e2e` — opt-in live AI Playwright (`AI_E2E=1`)
+- `npm run test:all` — runs all of the above in order
 - Every prompt-level request or decision gets appended to the Decision &
   Prompt Log in `docs/roadmap.md`, in chronological order.
 

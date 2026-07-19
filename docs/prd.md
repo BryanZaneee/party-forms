@@ -173,14 +173,12 @@ Demo fixtures double as test data:
   letter answering name/date/guests/meal but **not** special requests, so
   extraction provably reports missing information. A small PDF twin
   (generated locally) exercises the unpdf path.
-- **Tests** — deterministic logic (submission validation, schema checks)
-  uses Node's built-in `node --test`, zero extra dependencies. One
-  on-demand AI smoke script (`npm run test:ai`; needs `DEEPSEEK_API_KEY`,
-  costs tokens) hits the live API and asserts: TXT extract (≥4 answers,
-  meal option exact match, special-requests missing), PDF → `unpdf` →
-  extract with the same contracts, one chat turn that updates an answer
-  while preserving others, and `generateForm` returning a normalizable
-  title + ≥3 questions.
+- **Tests** — `npm test` runs deterministic unit, lib/API integration, and
+  regression suites (`node --test`, no AI). Playwright covers browser
+  flows (`npm run test:e2e`). Opt-in live AI (`npm run test:ai`) scores
+  real DeepSeek extract/chat/generate/draft against fixture ground truth
+  (never mocks completions) and reports TTFT, tokens/s, tokens, per-call
+  cost, and suite total cost. `npm run test:all` runs every layer.
 
 ## Tech stack
 
