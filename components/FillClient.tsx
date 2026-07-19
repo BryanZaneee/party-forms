@@ -2,9 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type { Answers, Form, Question } from "@/lib/types";
+import type { Answers, Form } from "@/lib/types";
 import { isAnswered, validateAnswers } from "@/lib/validate";
+import { revealAnswerOrder } from "@/lib/extract-reveal";
+import ExtractReveal from "./ExtractReveal";
 import Hero from "./Hero";
+import QuestionCard from "./QuestionCard";
 import Toast from "./Toast";
 
 interface ChatMsg {
@@ -17,13 +20,6 @@ const greeting = (form: Form): ChatMsg => ({
   text: `Hi! I can help you fill out “${form.title}”. Tell me your answers in your own words, or upload a document and I'll pull out what I can. What would you like to start with?`,
 });
 
-const controlStyle: React.CSSProperties = {
-  fontSize: 14,
-  border: "1px solid #d5dce8",
-  borderRadius: 8,
-  padding: "10px 12px",
-};
-
 export default function FillClient({ form }: { form: Form }) {
   const [answers, setAnswers] = useState<Answers>({});
   const [missing, setMissing] = useState<string[]>([]);
@@ -33,9 +29,13 @@ export default function FillClient({ form }: { form: Form }) {
   const [chatInput, setChatInput] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiReady, setAiReady] = useState(false);
+  const [revealing, setRevealing] = useState(false);
+  const [revealProgress, setRevealProgress] = useState<{ placed: number; total: number }>({ placed: 0, total: 0 });
+  const [flashIds, setFlashIds] = useState<string[]>([]);
   const [toast, setToast] = useState("");
   const toastT = useRef<ReturnType<typeof setTimeout>>(null);
   const chatScroll = useRef<HTMLDivElement>(null);
+  const revealCancel = useRef(false);
 
   useEffect(() => {
     const el = chatScroll.current;
@@ -67,6 +67,9 @@ export default function FillClient({ form }: { form: Form }) {
     setChatInput("");
     setAiBusy(false);
     setAiReady(false);
+    setRevealing(false);
+    setFlashIds([]);
+    revealCancel.current = true;
   };
 
   const sendChat = async () => {
@@ -125,7 +128,7 @@ export default function FillClient({ form }: { form: Form }) {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file || aiBusy) return;
+    if (!file || aiBusy || revealing) return;
     setChat((c) => [...c, { role: "user", text: `📄 Uploaded “${file.name}” — please pull out any answers you can.` }]);
     setAiBusy(true);
     try {
@@ -134,12 +137,38 @@ export default function FillClient({ form }: { form: Form }) {
       const res = await fetch(`/api/forms/${form.id}/extract`, { method: "POST", body: fd });
       const body = await res.json();
       if (!res.ok) throw new Error(body?.error);
-      const merged = { ...answers, ...body.answers };
+      const extracted = body.answers as Answers;
+      const base = { ...answers };
+      const order = revealAnswerOrder(form.questions, extracted);
+      revealCancel.current = false;
+      setRevealProgress({ placed: 0, total: order.length });
+      setRevealing(order.length > 0);
+      setAiBusy(false);
+
+      let merged = { ...base };
+      let placed = 0;
+      for (const id of order) {
+        if (revealCancel.current) break;
+        await new Promise((r) => setTimeout(r, 240));
+        if (revealCancel.current) break;
+        merged = { ...merged, [id]: extracted[id] };
+        placed += 1;
+        setAnswers(merged);
+        setRevealProgress({ placed, total: order.length });
+        setFlashIds((f) => [...f.filter((x) => x !== id), id]);
+        setMissing((m) => m.filter((x) => x !== id));
+      }
+
+      merged = { ...base, ...extracted };
       setAnswers(merged);
       setMissing((m) => m.filter((id) => !isAnswered(merged[id])));
+      // Let the last field's highlight land before the overlay fades out.
+      if (order.length > 0 && !revealCancel.current) await new Promise((r) => setTimeout(r, 320));
+      setRevealing(false);
+      setFlashIds([]);
       const check = validateAnswers(form.questions, merged);
       if (check.missing.length === 0) setAiReady(true);
-      const found = form.questions.filter((q) => q.id in body.answers).map((q) => q.label);
+      const found = form.questions.filter((q) => q.id in extracted).map((q) => q.label);
       const missingIds: string[] = Array.isArray(body.missing) ? body.missing : check.missing;
       const labelById = new Map(form.questions.map((q) => [q.id, q.label]));
       const stillMissing = missingIds.map((id) => labelById.get(id) ?? id);
@@ -152,12 +181,13 @@ export default function FillClient({ form }: { form: Form }) {
           (stillMissing.length ? ` Still missing: ${stillMissing.join(", ")}.` : "");
       setChat((c) => [...c, { role: "assistant", text: summary }]);
     } catch (err) {
+      setRevealing(false);
       setChat((c) => [
         ...c,
         { role: "assistant", text: err instanceof Error && err.message ? err.message : "Sorry, I couldn't read that document." },
       ]);
+      setAiBusy(false);
     }
-    setAiBusy(false);
   };
 
   const answeredCount = form.questions.filter((q) => isAnswered(answers[q.id])).length;
@@ -250,8 +280,17 @@ export default function FillClient({ form }: { form: Form }) {
             gap: 20,
             alignItems: "flex-start",
             flexWrap: "wrap",
+            position: "relative",
           }}
         >
+          <ExtractReveal
+            active={revealing}
+            label={
+              revealProgress.total > 0
+                ? `Placing answers from your document… ${revealProgress.placed} of ${revealProgress.total}`
+                : undefined
+            }
+          />
           <div style={{ flex: 1.25, minWidth: 380, display: "flex", flexDirection: "column", gap: 14 }}>
             {form.questions.map((q) => (
               <QuestionCard
@@ -259,13 +298,14 @@ export default function FillClient({ form }: { form: Form }) {
                 q={q}
                 value={answers[q.id]}
                 missing={missing.includes(q.id)}
+                highlight={flashIds.includes(q.id)}
                 onSet={(v) => setAnswer(q.id, v)}
                 onToggle={(opt) => toggleCheck(q.id, opt)}
               />
             ))}
             <button
               onClick={() => submit("form")}
-              disabled={submitting}
+              disabled={submitting || revealing}
               style={{
                 alignSelf: "flex-start",
                 background: "var(--accent)",
@@ -275,11 +315,13 @@ export default function FillClient({ form }: { form: Form }) {
                 padding: "13px 26px",
                 fontSize: 15,
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: submitting || revealing ? "default" : "pointer",
+                opacity: submitting || revealing ? 0.65 : 1,
                 marginTop: 6,
+                transition: "opacity .2s ease",
               }}
             >
-              Submit response
+              {submitting ? "Submitting…" : "Submit response"}
             </button>
           </div>
 
@@ -301,9 +343,19 @@ export default function FillClient({ form }: { form: Form }) {
             <div
               style={{ padding: "14px 18px", borderBottom: "1px solid #edf0f6", display: "flex", alignItems: "center", gap: 9 }}
             >
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)" }} />
-              <div style={{ fontSize: 14, fontWeight: 600 }}>AI assistant</div>
-              <div style={{ fontSize: 12, color: "#7a8699" }}>answers fill in live</div>
+              <div
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "var(--accent)",
+                  animation: aiBusy || revealing ? "blink 1.2s infinite" : undefined,
+                }}
+              />
+              <div style={{ fontSize: 14, fontWeight: 600 }}>Filler agent</div>
+              <div style={{ fontSize: 12, color: "#7a8699" }}>
+                {revealing ? "placing extracted answers…" : aiBusy ? "thinking…" : "chat or upload a document"}
+              </div>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "10px 16px", borderBottom: "1px solid #edf0f6" }}>
               {form.questions.map((q) => {
@@ -425,7 +477,7 @@ export default function FillClient({ form }: { form: Form }) {
                 />
                 <button
                   onClick={sendChat}
-                  disabled={aiBusy}
+                  disabled={aiBusy || !chatInput.trim()}
                   style={{
                     background: "var(--accent)",
                     color: "#fff",
@@ -434,154 +486,43 @@ export default function FillClient({ form }: { form: Form }) {
                     padding: "0 16px",
                     fontSize: 13.5,
                     fontWeight: 600,
-                    cursor: "pointer",
+                    cursor: aiBusy || !chatInput.trim() ? "default" : "pointer",
+                    opacity: aiBusy || !chatInput.trim() ? 0.55 : 1,
+                    transition: "opacity .2s ease",
                   }}
                 >
                   Send
                 </button>
               </div>
               <label
-                style={{ fontSize: 12.5, color: "#5c6b82", cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}
+                style={{
+                  fontSize: 12.5,
+                  color: "#5c6b82",
+                  cursor: aiBusy || revealing ? "default" : "pointer",
+                  opacity: aiBusy || revealing ? 0.6 : 1,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                  transition: "opacity .2s ease",
+                }}
               >
                 <span className="dashed" style={{ border: "1px dashed #b9c3d4", borderRadius: 7, padding: "5px 10px" }}>
                   📄 Upload a document
                 </span>
-                <span>AI extracts answers from it (.pdf, .txt, .md)</span>
-                <input type="file" accept=".pdf,.txt,.md" onChange={handleUpload} style={{ display: "none" }} />
+                <span>Filler agent extracts answers (.pdf, .txt, .md)</span>
+                <input
+                  type="file"
+                  accept=".pdf,.txt,.md"
+                  onChange={handleUpload}
+                  disabled={aiBusy || revealing}
+                  style={{ display: "none" }}
+                />
               </label>
             </div>
           </div>
         </div>
       )}
       <Toast text={toast} />
-    </div>
-  );
-}
-
-function QuestionCard({
-  q,
-  value,
-  missing,
-  onSet,
-  onToggle,
-}: {
-  q: Question;
-  value: Answers[string] | undefined;
-  missing: boolean;
-  onSet: (v: Answers[string]) => void;
-  onToggle: (opt: string) => void;
-}) {
-  const answered = isAnswered(value);
-  const str = typeof value === "string" ? value : "";
-  return (
-    <div
-      style={{
-        background: "#fff",
-        border: `1px solid ${missing ? "#e08579" : "#e2e7f0"}`,
-        borderRadius: 12,
-        padding: "18px 20px",
-      }}
-    >
-      <div style={{ display: "flex", gap: 6, alignItems: "baseline" }}>
-        <div style={{ fontSize: 15, fontWeight: 600 }}>{q.label}</div>
-        {q.required && <div style={{ color: "#c0392b", fontSize: 14 }}>*</div>}
-        <div style={{ flex: 1 }} />
-        {answered && <div style={{ fontSize: 11.5, color: "var(--accent)", fontWeight: 600 }}>✓ answered</div>}
-      </div>
-      {missing && <div style={{ fontSize: 12.5, color: "#c0392b", marginTop: 4 }}>This question is required.</div>}
-      <div style={{ marginTop: 12 }}>
-        {q.type === "text" && (
-          <input
-            value={str}
-            onChange={(e) => onSet(e.target.value)}
-            placeholder="Your answer"
-            style={{ ...controlStyle, width: "100%", boxSizing: "border-box" }}
-          />
-        )}
-        {q.type === "textarea" && (
-          <textarea
-            value={str}
-            onChange={(e) => onSet(e.target.value)}
-            placeholder="Your answer"
-            rows={3}
-            style={{ ...controlStyle, width: "100%", boxSizing: "border-box", resize: "vertical" }}
-          />
-        )}
-        {q.type === "date" && (
-          <input type="date" value={str} onChange={(e) => onSet(e.target.value)} style={{ ...controlStyle, padding: "9px 12px" }} />
-        )}
-        {q.type === "dropdown" && (
-          <select
-            value={str}
-            onChange={(e) => onSet(e.target.value)}
-            style={{ ...controlStyle, padding: "9px 10px", background: "#fff", minWidth: 220, cursor: "pointer" }}
-          >
-            <option value="">Select…</option>
-            {(q.options ?? []).map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
-          </select>
-        )}
-        {(q.type === "multiple_choice" || q.type === "checkbox") && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {(q.options ?? []).map((o) => {
-              const checked = q.type === "multiple_choice" ? value === o : Array.isArray(value) && value.includes(o);
-              return (
-                <label
-                  key={o}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 9,
-                    fontSize: 14,
-                    cursor: "pointer",
-                    padding: "8px 10px",
-                    border: `1px solid ${checked ? "var(--accent)" : "#e2e7f0"}`,
-                    borderRadius: 8,
-                    background: checked ? "var(--accent-soft)" : "#fff",
-                  }}
-                >
-                  <input
-                    type={q.type === "multiple_choice" ? "radio" : "checkbox"}
-                    checked={checked}
-                    onChange={() => (q.type === "multiple_choice" ? onSet(o) : onToggle(o))}
-                    style={{ accentColor: "var(--accent)" }}
-                  />{" "}
-                  {o}
-                </label>
-              );
-            })}
-          </div>
-        )}
-        {q.type === "rating" && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {Array.from({ length: q.max ?? 5 }, (_, k) => k + 1).map((n) => {
-              const lit = Number(str) >= n;
-              return (
-                <button
-                  key={n}
-                  onClick={() => onSet(String(n))}
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 9,
-                    border: `1px solid ${lit ? "var(--accent)" : "#d5dce8"}`,
-                    background: lit ? "var(--accent)" : "#fff",
-                    color: lit ? "#fff" : "#3a4a63",
-                    fontSize: 15,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  {n}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
