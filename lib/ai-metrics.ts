@@ -11,6 +11,12 @@ export const AI_PRICING = {
     inputCacheMissPerM: 0.95,
     outputPerM: 4.0,
   },
+  // Standard rates (intro $2/$10 through 2026-08-31 — we cost conservatively).
+  "claude-sonnet-5": {
+    inputCacheHitPerM: 0.3,
+    inputCacheMissPerM: 3.0,
+    outputPerM: 15.0,
+  },
 } as const;
 
 export type AiModel = keyof typeof AI_PRICING;

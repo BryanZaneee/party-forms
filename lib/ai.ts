@@ -1,3 +1,4 @@
+import Anthropic from "@anthropic-ai/sdk";
 import OpenAI, { toFile } from "openai";
 import type { Answers, Form, Question } from "./types.ts";
 import { coerceAnswers, isAnswered, normalizeQuestions, validateAnswers } from "./validate.ts";
@@ -9,10 +10,10 @@ import {
   type TokenUsage,
 } from "./ai-metrics.ts";
 
-/** Default kimi-k3; override for A/B runs: KIMI_MODEL=kimi-k2.6 npm run test:ai. */
+/** Default kimi-k3; override for A/B runs: AI_MODEL=claude-sonnet-5 npm run test:ai. */
 export const AI_MODEL: AiModel =
-  process.env.KIMI_MODEL && process.env.KIMI_MODEL in AI_PRICING
-    ? (process.env.KIMI_MODEL as AiModel)
+  process.env.AI_MODEL && process.env.AI_MODEL in AI_PRICING
+    ? (process.env.AI_MODEL as AiModel)
     : "kimi-k3";
 
 /** Accumulates per-call metrics for opt-in live AI tests. */
@@ -30,45 +31,116 @@ function client(): OpenAI {
   return new OpenAI({ apiKey, baseURL: "https://api.moonshot.ai/v1" });
 }
 
+function anthropicClient(): Anthropic {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set — AI features are unavailable");
+  return new Anthropic({ apiKey });
+}
+
 type ChatMessage = OpenAI.Chat.ChatCompletionMessageParam;
+
+/** Translate our OpenAI-shaped messages to Anthropic's system + messages split. */
+function toAnthropicMessages(messages: ChatMessage[]): {
+  system: string;
+  messages: Anthropic.MessageParam[];
+} {
+  let system = "";
+  const out: Anthropic.MessageParam[] = [];
+  for (const m of messages) {
+    if (m.role === "system") {
+      system += (system ? "\n\n" : "") + (m.content as string);
+      continue;
+    }
+    if (m.role !== "user" && m.role !== "assistant") continue;
+    if (typeof m.content === "string") {
+      out.push({ role: m.role, content: m.content });
+      continue;
+    }
+    const parts: Anthropic.ContentBlockParam[] = [];
+    for (const p of m.content ?? []) {
+      if (p.type === "image_url") {
+        const match = p.image_url.url.match(/^data:(.+?);base64,(.*)$/);
+        if (!match) continue;
+        parts.push({
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: match[1] as "image/png" | "image/jpeg" | "image/webp" | "image/gif",
+            data: match[2],
+          },
+        });
+      } else if (p.type === "text") {
+        parts.push({ type: "text", text: p.text });
+      }
+    }
+    out.push({ role: m.role, content: parts });
+  }
+  return { system, messages: out };
+}
 
 async function streamCompletion(
   messages: ChatMessage[],
   label: string
 ): Promise<{ raw: string; usage: TokenUsage; ttft_ms: number | null; latency_ms: number }> {
-  const c = client();
   const started = Date.now();
   let ttft_ms: number | null = null;
   let raw = "";
   let usage: TokenUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
 
-  const stream = await c.chat.completions.create({
-    model: AI_MODEL,
-    messages,
-    response_format: { type: "json_object" },
-    stream: true,
-    stream_options: { include_usage: true },
-    // K3 only supports max reasoning; k2.6 runs non-thinking for fast/cheap A/B runs.
-    ...(AI_MODEL === "kimi-k2.6" ? { thinking: { type: "disabled" } } : {}),
-  } as OpenAI.Chat.ChatCompletionCreateParamsStreaming);
-
-  for await (const chunk of stream) {
-    const delta = chunk.choices[0]?.delta?.content;
-    if (delta) {
-      // TTFT = first answer token; K3 streams reasoning before any content.
+  if (AI_MODEL.startsWith("claude-")) {
+    // Anthropic path: thinking disabled — the fast/cheap A/B configuration.
+    const { system, messages: aMessages } = toAnthropicMessages(messages);
+    const stream = anthropicClient().messages.stream({
+      model: AI_MODEL,
+      max_tokens: 8192,
+      thinking: { type: "disabled" },
+      system,
+      messages: aMessages,
+    });
+    stream.on("text", (delta) => {
       if (ttft_ms === null) ttft_ms = Date.now() - started;
       raw += delta;
-    }
-    if (chunk.usage) {
-      const cached = chunk.usage.prompt_tokens_details?.cached_tokens;
-      usage = {
-        prompt_tokens: chunk.usage.prompt_tokens,
-        completion_tokens: chunk.usage.completion_tokens,
-        total_tokens: chunk.usage.total_tokens,
-        prompt_cache_hit_tokens: cached,
-        prompt_cache_miss_tokens:
-          cached === undefined ? undefined : chunk.usage.prompt_tokens - cached,
-      };
+    });
+    const final = await stream.finalMessage();
+    const u = final.usage;
+    const cacheRead = u.cache_read_input_tokens ?? 0;
+    const cacheWrite = u.cache_creation_input_tokens ?? 0;
+    usage = {
+      prompt_tokens: u.input_tokens + cacheRead + cacheWrite,
+      completion_tokens: u.output_tokens,
+      total_tokens: u.input_tokens + cacheRead + cacheWrite + u.output_tokens,
+      prompt_cache_hit_tokens: cacheRead,
+      prompt_cache_miss_tokens: u.input_tokens + cacheWrite,
+    };
+  } else {
+    const stream = await client().chat.completions.create({
+      model: AI_MODEL,
+      messages,
+      response_format: { type: "json_object" },
+      stream: true,
+      stream_options: { include_usage: true },
+      // K3 only supports max reasoning; k2.6 runs non-thinking for fast/cheap A/B runs.
+      ...(AI_MODEL === "kimi-k2.6" ? { thinking: { type: "disabled" } } : {}),
+    } as OpenAI.Chat.ChatCompletionCreateParamsStreaming);
+
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content;
+      if (delta) {
+        // TTFT = first answer token; K3 streams reasoning before any content.
+        if (ttft_ms === null) ttft_ms = Date.now() - started;
+        raw += delta;
+      }
+      if (chunk.usage) {
+        const cached = chunk.usage.prompt_tokens_details?.cached_tokens;
+        usage = {
+          prompt_tokens: chunk.usage.prompt_tokens,
+          completion_tokens: chunk.usage.completion_tokens,
+          total_tokens: chunk.usage.total_tokens,
+          prompt_cache_hit_tokens: cached,
+          prompt_cache_miss_tokens:
+            cached === undefined ? undefined : chunk.usage.prompt_tokens - cached,
+        };
+      }
     }
   }
 
@@ -93,7 +165,9 @@ async function jsonCall<T>(
   for (let attempt = 0; attempt < 2; attempt++) {
     const { raw } = await streamCompletion(msgs, `${label}${attempt ? `:retry` : ""}`);
     try {
-      const value = check(JSON.parse(raw));
+      // Claude has no JSON mode here and may wrap output in ```json fences.
+      const cleaned = raw.trim().replace(/^```(?:json)?\s*/, "").replace(/```\s*$/, "");
+      const value = check(JSON.parse(cleaned));
       if (value !== null) return value;
     } catch {
       // fall through to retry
