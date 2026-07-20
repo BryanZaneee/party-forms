@@ -1,0 +1,144 @@
+CASA MIRAVELLA — VENDOR ONBOARDING FORM BRIEF
+
+We are Casa Miravella, a Spanish coastal restaurant in Santa Barbara joining
+the events marketplace. We need ONE onboarding form for new restaurant
+vendors. Build the form with ALL 114 questions below, in this exact order.
+Do not merge, drop, rename, or invent questions. Questions marked (required)
+must be required.
+
+Title the form "BIG Restaurant Vendor Onboarding".
+Description: "Complete vendor onboarding profile for the Casa Miravella events marketplace listing."
+
+--- Business identity ---
+1. Restaurant name (short text, required)
+2. Legal entity name (short text, required)
+3. Years in operation (short text, required)
+4. Primary cuisine (dropdown: Italian / Mexican / Japanese / American / French / Spanish, required)
+5. Secondary cuisine influence (short text)
+6. Street address (short text, required)
+7. City (short text, required)
+8. State (short text, required)
+9. ZIP code (short text, required)
+10. Neighborhood (short text)
+11. Website (short text)
+12. Instagram handle (short text)
+
+--- Primary contact ---
+13. Owner name (short text, required)
+14. Owner email (short text, required)
+15. Owner phone (short text, required)
+16. Events manager name (short text, required)
+17. Events manager email (short text, required)
+18. Events manager phone (short text)
+19. Preferred contact method (choose one: Email / Phone / Text, required)
+20. Best time to reach (short text)
+
+--- Venue and capacity ---
+21. Total seated capacity (short text, required)
+22. Private dining room available (choose one: Yes / No, required)
+23. Private dining room capacity (short text)
+24. Standing reception capacity (short text)
+25. Outdoor seating available (choose one: Yes / No)
+26. Outdoor seating capacity (short text)
+27. Full venue buyout available (choose one: Yes / No, required)
+28. Buyout minimum spend (short text, required)
+29. Wheelchair accessible (choose one: Yes / No, required)
+30. Parking options (check all that apply: Street / Private lot / Valet / Garage nearby)
+31. Coat check available (choose one: Yes / No)
+32. Stage or presentation area (choose one: Yes / No)
+33. AV equipment provided (check all that apply: Projector / Screen / Microphone / Speakers)
+34. Guest wifi (choose one: Yes / No)
+
+--- Food service ---
+35. Service styles offered (check all that apply: Plated / Buffet / Family-style / Passed appetizers / Food stations, required)
+36. Tasting menu offered (choose one: Yes / No)
+37. Prix fixe price per person (short text)
+38. Average dinner entree price (short text)
+39. Brunch service (choose one: Yes / No)
+40. Lunch service (choose one: Yes / No)
+41. Late-night menu (choose one: Yes / No)
+42. Kids menu available (choose one: Yes / No)
+43. Menu changes seasonally (choose one: Yes / No)
+44. Signature dish (long text)
+45. Vegetarian options (choose one: Yes / No, required)
+46. Vegan options (choose one: Yes / No)
+47. Gluten-free options (choose one: Yes / No, required)
+48. Nut-free kitchen (choose one: Yes / No)
+49. Halal options (choose one: Yes / No)
+50. Kosher certified (choose one: Yes / No)
+
+--- Beverage program ---
+51. Liquor license held (choose one: Yes / No, required)
+52. Liquor license number (short text, required)
+53. Alcohol service (dropdown: Full bar / Beer and wine only / BYOB / None, required)
+54. Sommelier on staff (choose one: Yes / No)
+55. Signature cocktails (long text)
+56. Corkage fee (short text)
+57. Non-alcoholic program (long text)
+58. Espresso or coffee program (choose one: Yes / No)
+
+--- Catering and events ---
+59. Off-site catering offered (choose one: Yes / No, required)
+60. Delivery radius (short text)
+61. Minimum catering order (short text)
+62. Catering lead time (short text, required)
+63. Maximum events per week (short text)
+64. Dedicated event coordinator provided (choose one: Yes / No, required)
+65. Setup and teardown included (choose one: Yes / No)
+66. Linens provided (choose one: Yes / No)
+67. China and flatware provided (choose one: Yes / No)
+68. Floral partnerships (short text)
+69. Preferred vendor list (long text)
+70. Cake cutting fee (short text)
+71. Outside desserts allowed (choose one: Yes / No)
+72. Event liability insurance provided (choose one: Yes / No, required)
+
+--- Pricing and payments ---
+73. Deposit required (short text, required)
+74. Payment methods accepted (check all that apply: Credit card / ACH transfer / Check / Cash, required)
+75. Cancellation notice window (short text, required)
+76. Cancellation fee (short text)
+77. Service charge (short text, required)
+78. Gratuity policy (short text)
+79. Plated dinner price per head (short text, required)
+80. Buffet price per head (short text)
+81. Invoice payment terms (short text)
+82. Refund policy (long text)
+
+--- Operations ---
+83. Days open (check all that apply: Monday / Tuesday / Wednesday / Thursday / Friday / Saturday / Sunday, required)
+84. Opening time (short text)
+85. Closing time (short text)
+86. Kitchen last call (short text)
+87. Holiday availability (long text)
+88. Total staff count (short text, required)
+89. Languages spoken by staff (check all that apply: English / Spanish / French / Mandarin)
+90. Staff uniform standard (short text)
+91. Health inspection grade (dropdown: A / B / C, required)
+92. Last health inspection date (date, required)
+93. Staff food-handler certified (choose one: Yes / No, required)
+94. Allergen training completed (choose one: Yes / No, required)
+
+--- Ratings and recognition ---
+95. Food quality self-rating (rating 1-10, required)
+96. Service self-rating (rating 1-5, required)
+97. Ambiance self-rating (rating 1-5)
+98. Typical noise level (dropdown: Quiet / Moderate / Lively / Loud)
+99. Dress code (dropdown: Casual / Smart casual / Business / Formal)
+100. Awards and recognition (long text)
+101. Notable press mentions (long text)
+102. Google rating (short text)
+103. Yelp rating (short text)
+104. Repeat client percentage (short text)
+
+--- Compliance and logistics ---
+105. Earliest booking date (date, required)
+106. Certificate of insurance on file (choose one: Yes / No, required)
+107. Insurance provider (short text, required)
+108. Coverage limit (short text)
+109. Business license number (short text)
+110. Tax ID on file (choose one: Yes / No)
+111. W-9 on file (choose one: Yes / No)
+112. Sustainability practices (long text)
+113. Community involvement (long text)
+114. Anything else we should know (long text)

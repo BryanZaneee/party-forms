@@ -44,9 +44,13 @@ Three sample forms are seeded on first run: **Event Booking Request**,
 **Restaurant Venue Profile** (all 7 question types), and **Event Vendor
 Application** (20-question long form).
 
-Try the fixtures: upload `restaurant-profile.pdf` / `.docx` / `.png` or
-`sample-document.pdf` / `.txt` on a fill page; drop `creator-brief.txt` or
-`creator-brief-long.txt` into the `/new` Draft-with-AI panel.
+Try the fixtures: upload `restaurant-venue-profile.pdf` / `.docx` / `.png` or
+`event-booking-request.pdf` / `.txt` on a fill page; drop
+`company-picnic-rsvp-brief.txt` or `event-vendor-application-brief.txt` into
+the `/new` Draft-with-AI panel. For the stress demo, drop
+`BIG-restaurant-form-brief.pdf` (114 questions) into `/new`, save, then upload
+`BIG-restaurant-onboarding-packet.pdf` on its fill page — 110 answers land and
+the agent asks for the 4 that are deliberately missing.
 
 ## ⬇️ Installation
 

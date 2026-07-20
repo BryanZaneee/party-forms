@@ -1,0 +1,905 @@
+{
+  "title": "BIG Restaurant Vendor Onboarding",
+  "description": "Complete vendor onboarding profile for the Casa Miravella events marketplace listing.",
+  "questions": [
+    {
+      "id": "q1",
+      "label": "Restaurant name",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q2",
+      "label": "Legal entity name",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q3",
+      "label": "Years in operation",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q4",
+      "label": "Primary cuisine",
+      "type": "dropdown",
+      "required": true,
+      "options": [
+        "Italian",
+        "Mexican",
+        "Japanese",
+        "American",
+        "French",
+        "Spanish"
+      ]
+    },
+    {
+      "id": "q5",
+      "label": "Secondary cuisine influence",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q6",
+      "label": "Street address",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q7",
+      "label": "City",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q8",
+      "label": "State",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q9",
+      "label": "ZIP code",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q10",
+      "label": "Neighborhood",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q11",
+      "label": "Website",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q12",
+      "label": "Instagram handle",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q13",
+      "label": "Owner name",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q14",
+      "label": "Owner email",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q15",
+      "label": "Owner phone",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q16",
+      "label": "Events manager name",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q17",
+      "label": "Events manager email",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q18",
+      "label": "Events manager phone",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q19",
+      "label": "Preferred contact method",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Email",
+        "Phone",
+        "Text"
+      ]
+    },
+    {
+      "id": "q20",
+      "label": "Best time to reach",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q21",
+      "label": "Total seated capacity",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q22",
+      "label": "Private dining room available",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q23",
+      "label": "Private dining room capacity",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q24",
+      "label": "Standing reception capacity",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q25",
+      "label": "Outdoor seating available",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q26",
+      "label": "Outdoor seating capacity",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q27",
+      "label": "Full venue buyout available",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q28",
+      "label": "Buyout minimum spend",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q29",
+      "label": "Wheelchair accessible",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q30",
+      "label": "Parking options",
+      "type": "checkbox",
+      "required": false,
+      "options": [
+        "Street",
+        "Private lot",
+        "Valet",
+        "Garage nearby"
+      ]
+    },
+    {
+      "id": "q31",
+      "label": "Coat check available",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q32",
+      "label": "Stage or presentation area",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q33",
+      "label": "AV equipment provided",
+      "type": "checkbox",
+      "required": false,
+      "options": [
+        "Projector",
+        "Screen",
+        "Microphone",
+        "Speakers"
+      ]
+    },
+    {
+      "id": "q34",
+      "label": "Guest wifi",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q35",
+      "label": "Service styles offered",
+      "type": "checkbox",
+      "required": true,
+      "options": [
+        "Plated",
+        "Buffet",
+        "Family-style",
+        "Passed appetizers",
+        "Food stations"
+      ]
+    },
+    {
+      "id": "q36",
+      "label": "Tasting menu offered",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q37",
+      "label": "Prix fixe price per person",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q38",
+      "label": "Average dinner entree price",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q39",
+      "label": "Brunch service",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q40",
+      "label": "Lunch service",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q41",
+      "label": "Late-night menu",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q42",
+      "label": "Kids menu available",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q43",
+      "label": "Menu changes seasonally",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q44",
+      "label": "Signature dish",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "id": "q45",
+      "label": "Vegetarian options",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q46",
+      "label": "Vegan options",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q47",
+      "label": "Gluten-free options",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q48",
+      "label": "Nut-free kitchen",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q49",
+      "label": "Halal options",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q50",
+      "label": "Kosher certified",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q51",
+      "label": "Liquor license held",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q52",
+      "label": "Liquor license number",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q53",
+      "label": "Alcohol service",
+      "type": "dropdown",
+      "required": true,
+      "options": [
+        "Full bar",
+        "Beer and wine only",
+        "BYOB",
+        "None"
+      ]
+    },
+    {
+      "id": "q54",
+      "label": "Sommelier on staff",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q55",
+      "label": "Signature cocktails",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "id": "q56",
+      "label": "Corkage fee",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q57",
+      "label": "Non-alcoholic program",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "id": "q58",
+      "label": "Espresso or coffee program",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q59",
+      "label": "Off-site catering offered",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q60",
+      "label": "Delivery radius",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q61",
+      "label": "Minimum catering order",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q62",
+      "label": "Catering lead time",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q63",
+      "label": "Maximum events per week",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q64",
+      "label": "Dedicated event coordinator provided",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q65",
+      "label": "Setup and teardown included",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q66",
+      "label": "Linens provided",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q67",
+      "label": "China and flatware provided",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q68",
+      "label": "Floral partnerships",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q69",
+      "label": "Preferred vendor list",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "id": "q70",
+      "label": "Cake cutting fee",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q71",
+      "label": "Outside desserts allowed",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q72",
+      "label": "Event liability insurance provided",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q73",
+      "label": "Deposit required",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q74",
+      "label": "Payment methods accepted",
+      "type": "checkbox",
+      "required": true,
+      "options": [
+        "Credit card",
+        "ACH transfer",
+        "Check",
+        "Cash"
+      ]
+    },
+    {
+      "id": "q75",
+      "label": "Cancellation notice window",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q76",
+      "label": "Cancellation fee",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q77",
+      "label": "Service charge",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q78",
+      "label": "Gratuity policy",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q79",
+      "label": "Plated dinner price per head",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q80",
+      "label": "Buffet price per head",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q81",
+      "label": "Invoice payment terms",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q82",
+      "label": "Refund policy",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "id": "q83",
+      "label": "Days open",
+      "type": "checkbox",
+      "required": true,
+      "options": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
+    },
+    {
+      "id": "q84",
+      "label": "Opening time",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q85",
+      "label": "Closing time",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q86",
+      "label": "Kitchen last call",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q87",
+      "label": "Holiday availability",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "id": "q88",
+      "label": "Total staff count",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q89",
+      "label": "Languages spoken by staff",
+      "type": "checkbox",
+      "required": false,
+      "options": [
+        "English",
+        "Spanish",
+        "French",
+        "Mandarin"
+      ]
+    },
+    {
+      "id": "q90",
+      "label": "Staff uniform standard",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q91",
+      "label": "Health inspection grade",
+      "type": "dropdown",
+      "required": true,
+      "options": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "q92",
+      "label": "Last health inspection date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "id": "q93",
+      "label": "Staff food-handler certified",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q94",
+      "label": "Allergen training completed",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q95",
+      "label": "Food quality self-rating",
+      "type": "rating",
+      "required": true,
+      "max": 10
+    },
+    {
+      "id": "q96",
+      "label": "Service self-rating",
+      "type": "rating",
+      "required": true,
+      "max": 5
+    },
+    {
+      "id": "q97",
+      "label": "Ambiance self-rating",
+      "type": "rating",
+      "required": false,
+      "max": 5
+    },
+    {
+      "id": "q98",
+      "label": "Typical noise level",
+      "type": "dropdown",
+      "required": false,
+      "options": [
+        "Quiet",
+        "Moderate",
+        "Lively",
+        "Loud"
+      ]
+    },
+    {
+      "id": "q99",
+      "label": "Dress code",
+      "type": "dropdown",
+      "required": false,
+      "options": [
+        "Casual",
+        "Smart casual",
+        "Business",
+        "Formal"
+      ]
+    },
+    {
+      "id": "q100",
+      "label": "Awards and recognition",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "id": "q101",
+      "label": "Notable press mentions",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "id": "q102",
+      "label": "Google rating",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q103",
+      "label": "Yelp rating",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q104",
+      "label": "Repeat client percentage",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q105",
+      "label": "Earliest booking date",
+      "type": "date",
+      "required": true
+    },
+    {
+      "id": "q106",
+      "label": "Certificate of insurance on file",
+      "type": "multiple_choice",
+      "required": true,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q107",
+      "label": "Insurance provider",
+      "type": "text",
+      "required": true
+    },
+    {
+      "id": "q108",
+      "label": "Coverage limit",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q109",
+      "label": "Business license number",
+      "type": "text",
+      "required": false
+    },
+    {
+      "id": "q110",
+      "label": "Tax ID on file",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q111",
+      "label": "W-9 on file",
+      "type": "multiple_choice",
+      "required": false,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "id": "q112",
+      "label": "Sustainability practices",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "id": "q113",
+      "label": "Community involvement",
+      "type": "textarea",
+      "required": false
+    },
+    {
+      "id": "q114",
+      "label": "Anything else we should know",
+      "type": "textarea",
+      "required": false
+    }
+  ]
+}
