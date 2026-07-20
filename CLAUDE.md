@@ -26,6 +26,7 @@ Explicitly out of scope: auth, user accounts, advanced config, visual polish
 - `npm run test:e2e` — Playwright on port 3001 (builds prod, temp DB, blanks
   `MOONSHOT_API_KEY` so AI routes 503 deterministically)
 - `npm run test:ai` — opt-in live Kimi K3 scorer + suite total cost
+  (`KIMI_MODEL=kimi-k2.6` runs the same suite non-thinking for A/B timing)
 - `npm run test:ai:e2e` — opt-in live AI Playwright (`AI_E2E=1`, `@ai` grep)
 - `npm run test:all` — all of the above in order
 

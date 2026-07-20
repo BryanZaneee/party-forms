@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import {
+  AI_MODEL,
   aiCallMetrics,
   chatTurn,
   clearAiCallMetrics,
@@ -201,7 +202,7 @@ test.after(() => {
   const totals = rollupSuiteTotals(aiCallMetrics);
   const report = {
     generated_at: new Date().toISOString(),
-    model: "kimi-k3",
+    model: AI_MODEL,
     suite_wall_clock_ms: Date.now() - suiteStarted,
     calls: aiCallMetrics,
     suite_totals: totals,

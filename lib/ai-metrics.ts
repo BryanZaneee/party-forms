@@ -1,9 +1,15 @@
-/** Moonshot Kimi K3 pricing (USD per 1M tokens), flat across the 1M context. */
+/** Moonshot Kimi pricing (USD per 1M tokens), flat across the context window. */
 export const AI_PRICING = {
   "kimi-k3": {
     inputCacheHitPerM: 0.3,
     inputCacheMissPerM: 3.0,
     outputPerM: 15.0,
+  },
+  // K2.6 runs non-thinking here (A/B comparison model); cache-hit rate approximate.
+  "kimi-k2.6": {
+    inputCacheHitPerM: 0.16,
+    inputCacheMissPerM: 0.95,
+    outputPerM: 4.0,
   },
 } as const;
 

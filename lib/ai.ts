@@ -2,13 +2,18 @@ import OpenAI, { toFile } from "openai";
 import type { Answers, Form, Question } from "./types.ts";
 import { coerceAnswers, isAnswered, normalizeQuestions, validateAnswers } from "./validate.ts";
 import {
+  AI_PRICING,
   buildCallMetrics,
   type AiModel,
   type CallMetrics,
   type TokenUsage,
 } from "./ai-metrics.ts";
 
-const MODEL: AiModel = "kimi-k3";
+/** Default kimi-k3; override for A/B runs: KIMI_MODEL=kimi-k2.6 npm run test:ai. */
+export const AI_MODEL: AiModel =
+  process.env.KIMI_MODEL && process.env.KIMI_MODEL in AI_PRICING
+    ? (process.env.KIMI_MODEL as AiModel)
+    : "kimi-k3";
 
 /** Accumulates per-call metrics for opt-in live AI tests. */
 export const aiCallMetrics: CallMetrics[] = [];
@@ -38,12 +43,14 @@ async function streamCompletion(
   let usage: TokenUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
 
   const stream = await c.chat.completions.create({
-    model: MODEL,
+    model: AI_MODEL,
     messages,
     response_format: { type: "json_object" },
     stream: true,
     stream_options: { include_usage: true },
-  });
+    // K3 only supports max reasoning; k2.6 runs non-thinking for fast/cheap A/B runs.
+    ...(AI_MODEL === "kimi-k2.6" ? { thinking: { type: "disabled" } } : {}),
+  } as OpenAI.Chat.ChatCompletionCreateParamsStreaming);
 
   for await (const chunk of stream) {
     const delta = chunk.choices[0]?.delta?.content;
@@ -67,7 +74,7 @@ async function streamCompletion(
 
   const latency_ms = Date.now() - started;
   aiCallMetrics.push(
-    buildCallMetrics({ label, model: MODEL, usage, latency_ms, ttft_ms })
+    buildCallMetrics({ label, model: AI_MODEL, usage, latency_ms, ttft_ms })
   );
   return { raw, usage, ttft_ms, latency_ms };
 }
