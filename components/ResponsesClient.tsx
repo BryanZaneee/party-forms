@@ -1,14 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { Form, Submission } from "@/lib/types";
 import { fmtWhen, valStr } from "./format";
-import Toast from "./Toast";
+import Toast, { useToast } from "./Toast";
 
 export default function ResponsesClient({ form, submissions }: { form: Form; submissions: Submission[] }) {
   const [detailId, setDetailId] = useState<string | null>(null);
-  const [toast, setToast] = useState("");
-  const toastT = useRef<ReturnType<typeof setTimeout>>(null);
+  const [toast, toastMsg] = useToast();
 
   const cols = form.questions.slice(0, 4);
   const detail = submissions.find((s) => s.id === detailId);
@@ -108,9 +107,7 @@ export default function ResponsesClient({ form, submissions }: { form: Form; sub
           <button
             onClick={() => {
               navigator.clipboard?.writeText(`${location.origin}/fill/${form.id}`);
-              setToast("Fill link copied to clipboard");
-              if (toastT.current) clearTimeout(toastT.current);
-              toastT.current = setTimeout(() => setToast(""), 2200);
+              toastMsg("Fill link copied to clipboard");
             }}
             style={{
               marginTop: 16,

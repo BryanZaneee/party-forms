@@ -4,9 +4,24 @@ import { normalizeQuestions } from "@/lib/validate";
 import { readUpload } from "@/lib/upload";
 import type { Question } from "@/lib/types";
 
+type ChatMsg = { role: "user" | "assistant"; content: string };
+
+function parseMessages(raw: unknown): ChatMsg[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter(
+      (m): m is ChatMsg =>
+        !!m &&
+        typeof m === "object" &&
+        ((m as { role?: string }).role === "user" || (m as { role?: string }).role === "assistant") &&
+        typeof (m as { content?: unknown }).content === "string"
+    )
+    .map((m) => ({ role: m.role, content: m.content }));
+}
+
 export async function POST(req: Request) {
   const ctype = req.headers.get("content-type") ?? "";
-  let messages: { role: "user" | "assistant"; content: string }[] = [];
+  let messages: ChatMsg[] = [];
   let title = "";
   let description = "";
   let questions: Question[] = [];
@@ -17,17 +32,7 @@ export async function POST(req: Request) {
       const form = await req.formData();
       const messagesRaw = form.get("messages");
       if (typeof messagesRaw === "string") {
-        const parsed = JSON.parse(messagesRaw) as unknown;
-        if (Array.isArray(parsed)) {
-          messages = parsed
-            .filter(
-              (m): m is { role: "user" | "assistant"; content: string } =>
-                !!m &&
-                (m.role === "user" || m.role === "assistant") &&
-                typeof m.content === "string"
-            )
-            .map((m) => ({ role: m.role, content: m.content }));
-        }
+        messages = parseMessages(JSON.parse(messagesRaw));
       }
       if (typeof form.get("title") === "string") title = String(form.get("title"));
       if (typeof form.get("description") === "string") description = String(form.get("description"));
@@ -47,20 +52,7 @@ export async function POST(req: Request) {
       if (!body || typeof body !== "object") {
         return NextResponse.json({ error: "JSON or multipart body required" }, { status: 400 });
       }
-      if (Array.isArray(body.messages)) {
-        messages = body.messages
-          .filter(
-            (m: unknown): m is { role: "user" | "assistant"; content: string } =>
-              !!m &&
-              typeof m === "object" &&
-              ((m as { role?: string }).role === "user" || (m as { role?: string }).role === "assistant") &&
-              typeof (m as { content?: unknown }).content === "string"
-          )
-          .map((m: { role: "user" | "assistant"; content: string }) => ({
-            role: m.role,
-            content: m.content,
-          }));
-      }
+      messages = parseMessages(body.messages);
       if (typeof body.title === "string") title = body.title;
       if (typeof body.description === "string") description = body.description;
       if (body.questions !== undefined) {

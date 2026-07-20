@@ -8,7 +8,7 @@ import { revealAnswerOrder } from "@/lib/extract-reveal";
 import ExtractReveal from "./ExtractReveal";
 import Hero from "./Hero";
 import QuestionCard from "./QuestionCard";
-import Toast from "./Toast";
+import Toast, { useToast } from "./Toast";
 
 interface ChatMsg {
   role: "user" | "assistant";
@@ -32,8 +32,7 @@ export default function FillClient({ form }: { form: Form }) {
   const [revealing, setRevealing] = useState(false);
   const [revealProgress, setRevealProgress] = useState<{ placed: number; total: number }>({ placed: 0, total: 0 });
   const [flashIds, setFlashIds] = useState<string[]>([]);
-  const [toast, setToast] = useState("");
-  const toastT = useRef<ReturnType<typeof setTimeout>>(null);
+  const [toast, toastMsg] = useToast();
   const chatScroll = useRef<HTMLDivElement>(null);
   const revealCancel = useRef(false);
 
@@ -41,12 +40,6 @@ export default function FillClient({ form }: { form: Form }) {
     const el = chatScroll.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [chat, aiBusy]);
-
-  const toastMsg = (t: string) => {
-    setToast(t);
-    if (toastT.current) clearTimeout(toastT.current);
-    toastT.current = setTimeout(() => setToast(""), 2200);
-  };
 
   const setAnswer = (qid: string, val: Answers[string]) => {
     setAnswers((a) => ({ ...a, [qid]: val }));

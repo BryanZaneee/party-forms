@@ -1,3 +1,7 @@
+"use client";
+
+import { useRef, useState } from "react";
+
 /** Fixed bottom-center dark pill; render only while text is non-empty. */
 export default function Toast({ text }: { text: string }) {
   if (!text) return null;
@@ -20,4 +24,16 @@ export default function Toast({ text }: { text: string }) {
       {text}
     </div>
   );
+}
+
+/** Shared toast state + 2200ms auto-clear. */
+export function useToast(): [string, (t: string) => void] {
+  const [toast, setToast] = useState("");
+  const toastT = useRef<ReturnType<typeof setTimeout>>(null);
+  const toastMsg = (t: string) => {
+    setToast(t);
+    if (toastT.current) clearTimeout(toastT.current);
+    toastT.current = setTimeout(() => setToast(""), 2200);
+  };
+  return [toast, toastMsg];
 }

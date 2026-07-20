@@ -71,10 +71,9 @@ test("delete cascades like DELETE /api/forms/[id]", () => {
 });
 
 test("AI helpers throw without API key (routes map to 503)", async () => {
-  const { chatTurn, generateForm, draftFormTurn } = await import("../lib/ai.ts");
+  const { chatTurn, draftFormTurn } = await import("../lib/ai.ts");
   const form = listForms()[0];
   await assert.rejects(() => chatTurn(form, [{ role: "user", content: "hi" }], {}), /ANTHROPIC_API_KEY/);
-  await assert.rejects(() => generateForm("RSVP"), /ANTHROPIC_API_KEY/);
   await assert.rejects(
     () => draftFormTurn([{ role: "user", content: "hi" }], { title: "", description: "", questions: [] }),
     /ANTHROPIC_API_KEY/

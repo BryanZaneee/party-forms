@@ -80,7 +80,7 @@ date (`YYYY-MM-DD`).
 
 ### AI layer (`lib/ai.ts`)
 
-All four AI features (`chatTurn`, `extractAnswers`, `generateForm`,
+All three AI features (`chatTurn`, `extractAnswers`,
 `draftFormTurn`) go through one `jsonCall` helper: JSON mode, streamed for
 TTFT, shape-checked, one retry on invalid output, per-call metrics pushed to
 `aiCallMetrics` (consumed by the live test scorer). Chat is stateless — the

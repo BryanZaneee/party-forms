@@ -1,23 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Form } from "@/lib/types";
 import { fmtDate } from "./format";
-import Toast from "./Toast";
+import Toast, { useToast } from "./Toast";
 
 export default function DashboardCards({ forms }: { forms: (Form & { submission_count: number })[] }) {
   const router = useRouter();
   const [menuId, setMenuId] = useState<string | null>(null);
-  const [toast, setToast] = useState("");
-  const toastT = useRef<ReturnType<typeof setTimeout>>(null);
-
-  const toastMsg = (t: string) => {
-    setToast(t);
-    if (toastT.current) clearTimeout(toastT.current);
-    toastT.current = setTimeout(() => setToast(""), 2200);
-  };
+  const [toast, toastMsg] = useToast();
 
   const copyLink = (id: string) => {
     navigator.clipboard?.writeText(`${location.origin}/fill/${id}`);

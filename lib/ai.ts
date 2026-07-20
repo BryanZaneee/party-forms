@@ -296,36 +296,6 @@ Respond with ONLY JSON: {"answers": {question id: answer (checkbox values as arr
   return { answers, missing };
 }
 
-/** Draft a form from a creator's description; result prefills the builder for review. */
-export async function generateForm(
-  description: string
-): Promise<{ title: string; description: string; questions: Question[] }> {
-  const system = `You design forms. From the user's description, produce a concise form.
-
-Question types: text (short answer), textarea (long answer), multiple_choice, dropdown, checkbox, rating, date.
-multiple_choice, dropdown, and checkbox questions need an "options" array of 2-6 strings.
-rating questions should include "max": 3, 5, 7, or 10.
-Mark a question "required" only when the form clearly needs it.
-
-Respond with ONLY JSON:
-{"title": string, "description": string (one sentence), "questions": [{"label": string, "type": string, "options"?: string[], "max"?: number, "required": boolean}]}`;
-
-  return jsonCall(
-    [
-      { role: "system", content: system },
-      { role: "user", content: description },
-    ],
-    (parsed) => {
-      const p = parsed as { title?: unknown; description?: unknown; questions?: unknown };
-      if (typeof p?.title !== "string" || !p.title.trim()) return null;
-      const questions = normalizeQuestions(p.questions);
-      const desc = typeof p.description === "string" ? p.description.trim() : "";
-      return questions && { title: p.title.trim(), description: desc, questions };
-    },
-    "generateForm"
-  );
-}
-
 export interface DraftFormTurnResult {
   reply: string;
   title: string;

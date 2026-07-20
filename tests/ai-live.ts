@@ -10,7 +10,6 @@ import {
   draftFormTurn,
   extractAnswers,
   extractFileText,
-  generateForm,
 } from "../lib/ai.ts";
 import { formatSuiteCostLine, rollupSuiteTotals } from "../lib/ai-metrics.ts";
 import { listForms } from "../lib/db.ts";
@@ -69,17 +68,6 @@ test("chat updates extracted answer without losing others", async () => {
   console.log("chat reply:", turn.reply);
   assert.equal(turn.answers.q3, "30");
   assert.equal(turn.answers.q4, "Vegan");
-});
-
-test("generateForm returns normalizable schema", async () => {
-  const drafted = await generateForm(
-    "A short RSVP form for a company picnic: guest name, attending yes/no, meal choice, and dietary notes."
-  );
-  assert.ok(drafted.title.trim());
-  assert.ok(drafted.questions.length >= 3);
-  const normalized = normalizeQuestions(drafted.questions);
-  assert.ok(normalized);
-  assert.equal(normalized!.length, drafted.questions.length);
 });
 
 test("creator draftFormTurn from brief document", async () => {

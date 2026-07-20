@@ -1,7 +1,5 @@
 import type { AnswerValue } from "@/lib/types";
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 // SQLite datetime('now') is UTC without a zone marker; tag it before parsing.
 function parseUTC(sqlite: string): Date {
   return new Date(sqlite.replace(" ", "T") + "Z");
@@ -9,15 +7,18 @@ function parseUTC(sqlite: string): Date {
 
 /** "Jul 18" */
 export function fmtDate(sqlite: string): string {
-  const d = parseUTC(sqlite);
-  return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  return parseUTC(sqlite).toLocaleString("en-US", { month: "short", day: "numeric" });
 }
 
 /** "Jul 18, 3:42 PM" */
 export function fmtWhen(sqlite: string): string {
-  const d = parseUTC(sqlite);
-  const h = d.getHours();
-  return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${h % 12 || 12}:${String(d.getMinutes()).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+  return parseUTC(sqlite).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 /** Display value for a response cell: arrays joined, blanks as an em dash. */

@@ -15,6 +15,7 @@
 /playwright-report/
 /blob-report/
 /tests/last-run-metrics.json
+.playwright-mcp/
 
 # next.js
 /.next/

@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { QuestionType } from "@/lib/types";
 import CreatorAgentPanel, { type DraftQ } from "@/components/CreatorAgentPanel";
 import Hero from "@/components/Hero";
-import Toast from "@/components/Toast";
+import Toast, { useToast } from "@/components/Toast";
 
 const TYPE_OPTS: { v: QuestionType; label: string }[] = [
   { v: "text", label: "Short text" },
@@ -39,14 +39,7 @@ export default function Builder() {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState("");
-  const toastT = useRef<ReturnType<typeof setTimeout>>(null);
-
-  const toastMsg = (t: string) => {
-    setToast(t);
-    if (toastT.current) clearTimeout(toastT.current);
-    toastT.current = setTimeout(() => setToast(""), 2200);
-  };
+  const [toast, toastMsg] = useToast();
 
   const updateQ = (i: number, patch: Partial<DraftQ>) =>
     setQuestions((qs) => qs.map((q, j) => (j === i ? { ...q, ...patch } : q)));
