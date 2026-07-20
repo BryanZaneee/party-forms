@@ -31,7 +31,6 @@ export default function ExtractReveal({ active, label }: { active: boolean; labe
         justifyContent: "center",
         pointerEvents: "none",
         overflow: "hidden",
-        borderRadius: 14,
         animation: "overlay-in .3s ease both",
       }}
       data-testid="extract-reveal"

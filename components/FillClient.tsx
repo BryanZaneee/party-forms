@@ -168,17 +168,20 @@ export default function FillClient({ form }: { form: Form }) {
       setFlashIds([]);
       const check = validateAnswers(form.questions, merged);
       if (check.missing.length === 0) setAiReady(true);
-      const found = form.questions.filter((q) => q.id in extracted).map((q) => q.label);
+      const foundCount = form.questions.filter((q) => q.id in extracted).length;
       const missingIds: string[] = Array.isArray(body.missing) ? body.missing : check.missing;
-      const labelById = new Map(form.questions.map((q) => [q.id, q.label]));
-      const stillMissing = missingIds.map((id) => labelById.get(id) ?? id);
-      const summary = found.length
-        ? `I read “${file.name}” and filled in: ${found.join(", ")}.` +
-          (stillMissing.length
-            ? ` Still missing: ${stillMissing.join(", ")}.`
-            : " Everything is filled in — review your answers and submit when ready.")
-        : `I couldn't find any answers in “${file.name}”.` +
-          (stillMissing.length ? ` Still missing: ${stillMissing.join(", ")}.` : "");
+      const byId = new Map(form.questions.map((q) => [q.id, q]));
+      const bullets = missingIds
+        .map((id) => byId.get(id))
+        .filter((q) => q !== undefined)
+        .map((q) => `• ${q.label}${q.required ? " (required)" : ""}`)
+        .join("\n");
+      const summary = foundCount
+        ? `I read “${file.name}” and filled in ${foundCount} of ${form.questions.length} answers.` +
+          (bullets
+            ? `\n\nI still need:\n${bullets}`
+            : "\n\nEverything is filled in — review your answers and submit when ready.")
+        : `I couldn't find any answers in “${file.name}”.` + (bullets ? `\n\nI still need:\n${bullets}` : "");
       setChat((c) => [...c, { role: "assistant", text: summary }]);
     } catch (err) {
       setRevealing(false);
@@ -283,14 +286,6 @@ export default function FillClient({ form }: { form: Form }) {
             position: "relative",
           }}
         >
-          <ExtractReveal
-            active={revealing}
-            label={
-              revealProgress.total > 0
-                ? `Placing answers from your document… ${revealProgress.placed} of ${revealProgress.total}`
-                : undefined
-            }
-          />
           <div style={{ flex: 1.25, minWidth: 380, display: "flex", flexDirection: "column", gap: 14 }}>
             {form.questions.map((q) => (
               <QuestionCard
@@ -357,42 +352,67 @@ export default function FillClient({ form }: { form: Form }) {
                 {revealing ? "placing extracted answers…" : aiBusy ? "thinking…" : "chat or upload a document"}
               </div>
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "10px 16px", borderBottom: "1px solid #edf0f6" }}>
-              {form.questions.map((q) => {
-                const done = isAnswered(answers[q.id]);
-                const label = q.label.length > 22 ? q.label.slice(0, 21) + "…" : q.label;
-                return (
-                  <div
-                    key={q.id}
-                    style={{
-                      fontSize: 11.5,
-                      fontWeight: 600,
-                      padding: "4px 9px",
-                      borderRadius: 99,
-                      background: done ? "var(--accent-soft)" : "#f3f5f9",
-                      color: done ? "var(--accent)" : "#7a8699",
-                      border: `1px solid ${done ? "var(--accent)" : "#e2e7f0"}`,
-                    }}
-                  >
-                    {done ? "✓" : "○"} {label}
-                    {q.required ? " *" : ""}
-                  </div>
-                );
-              })}
-            </div>
-            <div
-              ref={chatScroll}
-              style={{
-                height: 380,
-                overflowY: "auto",
-                padding: "16px 18px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                background: "#f8fafd",
-              }}
-            >
-              {chat.map((m, i) => (
+            <div style={{ position: "relative" }}>
+              <ExtractReveal
+                active={revealing}
+                label={
+                  revealProgress.total > 0
+                    ? `Reading your document… ${revealProgress.placed} of ${revealProgress.total} answers placed`
+                    : undefined
+                }
+              />
+              <div
+                ref={chatScroll}
+                style={{
+                  height: 380,
+                  overflowY: "auto",
+                  padding: "0 18px 16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                  background: "#f8fafd",
+                }}
+              >
+                {/* Sticky checklist inside the chat window; floats above the reveal shader. */}
+                <div
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 6,
+                    margin: "0 -18px",
+                    padding: "10px 16px",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 6,
+                    background: "rgba(248,250,253,.95)",
+                    borderBottom: "1px solid #edf0f6",
+                    backdropFilter: "blur(2px)",
+                  }}
+                >
+                  {form.questions.map((q) => {
+                    const done = isAnswered(answers[q.id]);
+                    const label = q.label.length > 22 ? q.label.slice(0, 21) + "…" : q.label;
+                    return (
+                      <div
+                        key={q.id}
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: 600,
+                          padding: "4px 9px",
+                          borderRadius: 99,
+                          background: done ? "var(--accent-soft)" : "#f3f5f9",
+                          color: done ? "var(--accent)" : "#7a8699",
+                          border: `1px solid ${done ? "var(--accent)" : "#e2e7f0"}`,
+                          transition: "background .25s ease, color .25s ease, border-color .25s ease",
+                        }}
+                      >
+                        {done ? "✓" : "○"} {label}
+                        {q.required ? " *" : ""}
+                      </div>
+                    );
+                  })}
+                </div>
+                {chat.map((m, i) => (
                 <div
                   key={i}
                   style={{
@@ -418,6 +438,7 @@ export default function FillClient({ form }: { form: Form }) {
                   <span style={{ animation: "blink 1.2s .4s infinite" }}>●</span>
                 </div>
               )}
+              </div>
             </div>
             {aiReady && validateAnswers(form.questions, answers).missing.length === 0 && (
               <div

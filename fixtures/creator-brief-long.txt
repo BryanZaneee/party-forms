@@ -1,0 +1,59 @@
+Vendor Network Intake Form - Full Brief
+
+We are Party Place, an events company in Portland, Oregon. We are opening
+applications for our preferred vendor network (caterers, photographers,
+DJs, florists, stylists, and transportation partners), and we need a
+thorough intake form. Please build it from this brief. Everything below
+should become a question unless marked as background.
+
+Section 1 - Business identity
+- Business name. Required.
+- What category of vendor are they? One choice from: catering,
+  photography, music and DJ, florals, venue styling, transportation, or
+  other. Required.
+- How many years they have been in business. Required.
+- Full business address. Required.
+
+Section 2 - Contact details
+- Name of the main contact person. Required.
+- Contact email. Required.
+- Contact phone number. Required.
+- Website or portfolio link. Optional - not everyone has one.
+
+Section 3 - Services and logistics
+- Which services do they offer? They should be able to tick all that
+  apply: on-site staff, delivery and setup, teardown and cleanup, custom
+  design consultations, equipment rentals, and day-of coordination.
+  Required, at least one.
+- What area do they serve? One of: Portland metro, Willamette Valley,
+  Oregon statewide, Pacific Northwest, or nationwide. Required.
+- What size of event do they typically handle? Buckets: under 25 guests,
+  25-75, 75-150, 150-300, or 300+. Required.
+
+Section 4 - Business practices
+- Insurance status: fully insured, liability only, or not insured.
+  Required - this is a compliance gate for us.
+- Preferred payment structure: deposit plus balance, full prepayment,
+  installments, or net-30 invoicing. Required.
+- For caterers specifically we care about dietary accommodations, so add
+  a tick-all-that-apply list: vegetarian, vegan, gluten-free, kosher,
+  halal, nut-free. Optional, since not every vendor serves food.
+
+Section 5 - Experience and availability
+- Have them self-rate their event experience on a 1-to-10 scale, where 1
+  means brand new and 10 means seasoned veteran. Required.
+- The earliest date they could take a booking from us, as a real date.
+  Required.
+- A short written summary of their cancellation policy. Required - our
+  planners read these word for word.
+
+Section 6 - The extras
+- Any awards or press mentions they want to share. Optional long answer.
+- How they heard about the vendor network: referral, social media, trade
+  show, search, or other. Optional.
+- A final open "anything else we should know?" long-answer box. Optional.
+
+Background (do not turn into questions): applications are reviewed every
+Friday, and approved vendors get a listing in our planner portal. Keep
+the tone of the form friendly but professional, and keep required
+markers accurate - our coordinators filter on them.

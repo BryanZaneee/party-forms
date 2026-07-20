@@ -52,11 +52,12 @@ components (`components/*.tsx`) write only through the API routes under
 Singleton better-sqlite3 connection; `PARTY_TE_DB` env var overrides the db
 path (`var/data.db` by default, `:memory:` supported) — this is the test seam,
 with `resetDbForTests()` to force a re-open. Questions and answers are
-stored as JSON text columns, not normalized rows. Two sample forms are
+stored as JSON text columns, not normalized rows. Three sample forms are
 seeded per-title whenever absent (so existing DBs self-heal): "Event Booking
-Request" (`SEED_QUESTIONS`) and "Restaurant Venue Profile"
-(`RESTAURANT_SEED_QUESTIONS`, all 7 question types); both double as AI-test
-fixtures.
+Request" (`SEED_QUESTIONS`), "Restaurant Venue Profile"
+(`RESTAURANT_SEED_QUESTIONS`, all 7 question types), and "Event Vendor
+Application" (`VENDOR_SEED_QUESTIONS`, 20 questions — the long-form demo);
+they double as AI-test fixtures.
 
 ### Validation trust boundary (`lib/validate.ts`)
 

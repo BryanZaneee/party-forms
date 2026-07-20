@@ -12,6 +12,7 @@ process.env.PARTY_TE_DB = dbPath;
 const {
   RESTAURANT_SEED_QUESTIONS,
   SEED_QUESTIONS,
+  VENDOR_SEED_QUESTIONS,
   createForm,
   createSubmission,
   deleteForm,
@@ -26,9 +27,9 @@ test.after(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-test("empty DB seeds both sample forms", () => {
+test("empty DB seeds all sample forms", () => {
   const forms = listForms();
-  assert.equal(forms.length, 2);
+  assert.equal(forms.length, 3);
   const event = forms.find((f) => f.title === "Event Booking Request");
   assert.ok(event);
   assert.deepEqual(
@@ -40,6 +41,15 @@ test("empty DB seeds both sample forms", () => {
   assert.ok(venue);
   assert.deepEqual(venue.questions, RESTAURANT_SEED_QUESTIONS);
   assert.equal(venue.submission_count, 0);
+  const vendor = forms.find((f) => f.title === "Event Vendor Application");
+  assert.ok(vendor);
+  assert.deepEqual(vendor.questions, VENDOR_SEED_QUESTIONS);
+});
+
+test("vendor seed is long, covers all 7 types, and normalizes cleanly", () => {
+  assert.ok(VENDOR_SEED_QUESTIONS.length >= 20);
+  assert.equal(new Set(VENDOR_SEED_QUESTIONS.map((q) => q.type)).size, 7);
+  assert.deepEqual(normalizeQuestions(VENDOR_SEED_QUESTIONS), VENDOR_SEED_QUESTIONS);
 });
 
 test("restaurant seed covers all 7 types and normalizes cleanly", () => {

@@ -35,6 +35,30 @@ export const RESTAURANT_SEED_QUESTIONS: Question[] = [
   { id: "q12", label: "Anything else we should know?", type: "textarea", required: false },
 ];
 
+/** Third seed: a deliberately long form (20 questions) to demo AI fill/chat at scale. */
+export const VENDOR_SEED_QUESTIONS: Question[] = [
+  { id: "q1", label: "Business name", type: "text", required: true },
+  { id: "q2", label: "Vendor category", type: "dropdown", options: ["Catering", "Photography", "Music and DJ", "Florals", "Venue styling", "Transportation", "Other"], required: true },
+  { id: "q3", label: "Years in business", type: "text", required: true },
+  { id: "q4", label: "Business address", type: "text", required: true },
+  { id: "q5", label: "Contact person", type: "text", required: true },
+  { id: "q6", label: "Contact email", type: "text", required: true },
+  { id: "q7", label: "Contact phone", type: "text", required: true },
+  { id: "q8", label: "Website or portfolio link", type: "text", required: false },
+  { id: "q9", label: "Services offered", type: "checkbox", options: ["On-site staff", "Delivery and setup", "Teardown and cleanup", "Custom design consultations", "Equipment rentals", "Day-of coordination"], required: true },
+  { id: "q10", label: "Service area", type: "dropdown", options: ["Portland metro", "Willamette Valley", "Oregon statewide", "Pacific Northwest", "Nationwide"], required: true },
+  { id: "q11", label: "Typical event size", type: "dropdown", options: ["Under 25 guests", "25-75 guests", "75-150 guests", "150-300 guests", "300+ guests"], required: true },
+  { id: "q12", label: "Insurance coverage", type: "multiple_choice", options: ["Fully insured", "Liability only", "Not insured"], required: true },
+  { id: "q13", label: "Preferred payment structure", type: "multiple_choice", options: ["Deposit plus balance", "Full prepayment", "Installments", "Net-30 invoice"], required: true },
+  { id: "q14", label: "Dietary accommodations", type: "checkbox", options: ["Vegetarian", "Vegan", "Gluten-free", "Kosher", "Halal", "Nut-free"], required: false },
+  { id: "q15", label: "Event experience (1 = new, 10 = veteran)", type: "rating", max: 10, required: true },
+  { id: "q16", label: "Earliest booking date", type: "date", required: true },
+  { id: "q17", label: "Cancellation policy summary", type: "textarea", required: true },
+  { id: "q18", label: "Awards or press mentions", type: "textarea", required: false },
+  { id: "q19", label: "How did you hear about our vendor network?", type: "multiple_choice", options: ["Referral", "Social media", "Trade show", "Search", "Other"], required: false },
+  { id: "q20", label: "Anything else we should know?", type: "textarea", required: false },
+];
+
 function resolveDbPath(): string {
   return process.env.PARTY_TE_DB ?? path.join(process.cwd(), "var", "data.db");
 }
@@ -95,6 +119,14 @@ function initSchema(database: Database.Database): void {
       "Restaurant Venue Profile",
       "Tell us about your restaurant so we can match you with private-event bookings.",
       JSON.stringify(RESTAURANT_SEED_QUESTIONS)
+    );
+  }
+  if (!has.get("Event Vendor Application")) {
+    insert.run(
+      randomUUID(),
+      "Event Vendor Application",
+      "Apply to join our preferred vendor network for weddings and private events.",
+      JSON.stringify(VENDOR_SEED_QUESTIONS)
     );
   }
 }

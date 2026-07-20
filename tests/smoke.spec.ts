@@ -11,6 +11,7 @@ test("dashboard lists seeded forms", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Event Booking Request")).toBeVisible();
   await expect(page.getByText("Restaurant Venue Profile")).toBeVisible();
+  await expect(page.getByText("Event Vendor Application")).toBeVisible();
 });
 
 test("builder shows creator agent panel", async ({ page }) => {
