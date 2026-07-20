@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-test("sample PDF yields readable text via unpdf", async () => {
-  const pdfBytes = new Uint8Array(readFileSync("fixtures/sample-document.pdf"));
+test("event-booking PDF yields readable text via unpdf", async () => {
+  const pdfBytes = new Uint8Array(readFileSync("fixtures/event-booking-request.pdf"));
   const { extractText, getDocumentProxy } = await import("unpdf");
   const pdf = await getDocumentProxy(pdfBytes);
   const { text } = await extractText(pdf, { mergePages: true });
@@ -12,8 +12,8 @@ test("sample PDF yields readable text via unpdf", async () => {
   assert.match(text, /vegan/i);
 });
 
-test("restaurant PDF yields readable text via unpdf", async () => {
-  const pdfBytes = new Uint8Array(readFileSync("fixtures/restaurant-profile.pdf"));
+test("restaurant-venue PDF yields readable text via unpdf", async () => {
+  const pdfBytes = new Uint8Array(readFileSync("fixtures/restaurant-venue-profile.pdf"));
   const { extractText, getDocumentProxy } = await import("unpdf");
   const pdf = await getDocumentProxy(pdfBytes);
   const { text } = await extractText(pdf, { mergePages: true });

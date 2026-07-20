@@ -49,7 +49,7 @@ test("filler extract UI can show paper-shader reveal @ui", async ({ page }) => {
     });
   });
 
-  await page.locator('input[type="file"]').setInputFiles("fixtures/sample-document.txt");
+  await page.locator('input[type="file"]').setInputFiles("fixtures/event-booking-request.txt");
   await expect(page.getByTestId("extract-reveal")).toBeVisible({ timeout: 10000 });
   await expect(page.locator('input[placeholder="Your answer"]').first()).toHaveValue("Test User", {
     timeout: 15000,
@@ -61,7 +61,7 @@ test("live AI extract fills vegan meal @ai", async ({ page }) => {
   // K3 reasoning is always-on; the reveal waits on the full extract call.
   test.setTimeout(300_000);
   await openEventFill(page);
-  await page.locator('input[type="file"]').setInputFiles("fixtures/sample-document.txt");
+  await page.locator('input[type="file"]').setInputFiles("fixtures/event-booking-request.txt");
   await expect(page.getByTestId("extract-reveal")).toBeVisible({ timeout: 240_000 });
   await expect(page.locator("select").first()).toHaveValue("Vegan", { timeout: 60000 });
 });
