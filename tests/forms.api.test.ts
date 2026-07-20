@@ -4,12 +4,12 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { coerceAnswers, normalizeQuestions, validateAnswers } from "../lib/validate.ts";
-import { readUploadText } from "../lib/upload.ts";
+import { readUpload } from "../lib/upload.ts";
 
 const dir = mkdtempSync(path.join(tmpdir(), "party-te-api-"));
 process.env.PARTY_TE_DB = path.join(dir, "api.db");
-const prevKey = process.env.DEEPSEEK_API_KEY;
-delete process.env.DEEPSEEK_API_KEY;
+const prevKey = process.env.MOONSHOT_API_KEY;
+delete process.env.MOONSHOT_API_KEY;
 
 const {
   resetDbForTests,
@@ -24,8 +24,8 @@ const {
 test.after(() => {
   resetDbForTests();
   rmSync(dir, { recursive: true, force: true });
-  if (prevKey !== undefined) process.env.DEEPSEEK_API_KEY = prevKey;
-  else delete process.env.DEEPSEEK_API_KEY;
+  if (prevKey !== undefined) process.env.MOONSHOT_API_KEY = prevKey;
+  else delete process.env.MOONSHOT_API_KEY;
 });
 
 test("create form pipeline mirrors POST /api/forms", () => {
@@ -69,22 +69,46 @@ test("delete cascades like DELETE /api/forms/[id]", () => {
 test("AI helpers throw without API key (routes map to 503)", async () => {
   const { chatTurn, generateForm, draftFormTurn } = await import("../lib/ai.ts");
   const form = listForms()[0];
-  await assert.rejects(() => chatTurn(form, [{ role: "user", content: "hi" }], {}), /DEEPSEEK_API_KEY/);
-  await assert.rejects(() => generateForm("RSVP"), /DEEPSEEK_API_KEY/);
+  await assert.rejects(() => chatTurn(form, [{ role: "user", content: "hi" }], {}), /MOONSHOT_API_KEY/);
+  await assert.rejects(() => generateForm("RSVP"), /MOONSHOT_API_KEY/);
   await assert.rejects(
     () => draftFormTurn([{ role: "user", content: "hi" }], { title: "", description: "", questions: [] }),
-    /DEEPSEEK_API_KEY/
+    /MOONSHOT_API_KEY/
   );
 });
 
 test("upload guard rejects unsupported type (415)", async () => {
-  const res = await readUploadText(new File(["x"], "photo.png", { type: "image/png" }));
+  const res = await readUpload(new File(["x"], "data.zip", { type: "application/zip" }));
   assert.equal(res.ok, false);
   if (!res.ok) assert.equal(res.status, 415);
 });
 
+test("upload guard rejects image when caller does not opt in (415)", async () => {
+  const res = await readUpload(new File(["x"], "photo.png", { type: "image/png" }));
+  assert.equal(res.ok, false);
+  if (!res.ok) assert.equal(res.status, 415);
+});
+
+test("upload guard returns image kind when allowed", async () => {
+  const res = await readUpload(
+    new File([new Uint8Array([137, 80, 78, 71])], "photo.png", { type: "image/png" }),
+    { image: true }
+  );
+  assert.ok(res.ok && res.kind === "image", "expected ok image result");
+  if (res.ok && res.kind === "image") assert.match(res.dataUrl, /^data:image\/png;base64,/);
+});
+
+test("docx without API key maps to 503 (file extraction unavailable)", async () => {
+  const res = await readUpload(new File(["x"], "brief.docx"));
+  assert.equal(res.ok, false);
+  if (!res.ok) {
+    assert.equal(res.status, 503);
+    assert.match(res.error, /MOONSHOT_API_KEY/);
+  }
+});
+
 test("upload guard reads sample txt", async () => {
-  const res = await readUploadText(new File(["Hello Bryan"], "note.txt", { type: "text/plain" }));
-  assert.equal(res.ok, true);
-  if (res.ok) assert.match(res.text, /Bryan/);
+  const res = await readUpload(new File(["Hello Bryan"], "note.txt", { type: "text/plain" }));
+  assert.ok(res.ok && res.kind === "text", "expected ok text result");
+  if (res.ok && res.kind === "text") assert.match(res.text, /Bryan/);
 });

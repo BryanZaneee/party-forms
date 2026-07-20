@@ -257,7 +257,7 @@ export default function CreatorAgentPanel({
             Upload brief
             <input
               type="file"
-              accept=".pdf,.txt,.md"
+              accept=".pdf,.txt,.md,.docx,.doc"
               disabled={busy}
               style={{ display: "none" }}
               onChange={(e) => {

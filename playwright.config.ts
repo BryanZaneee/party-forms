@@ -29,7 +29,7 @@ export default defineConfig({
       ...process.env,
       PARTY_TE_DB: e2eDb,
       // Deterministic E2E must not call live AI unless AI_E2E=1
-      ...(process.env.AI_E2E ? {} : { DEEPSEEK_API_KEY: "" }),
+      ...(process.env.AI_E2E ? {} : { MOONSHOT_API_KEY: "" }),
     },
     timeout: 180_000,
   },

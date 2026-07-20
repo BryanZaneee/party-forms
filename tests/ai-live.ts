@@ -8,6 +8,7 @@ import {
   clearAiCallMetrics,
   draftFormTurn,
   extractAnswers,
+  extractFileText,
   generateForm,
 } from "../lib/ai.ts";
 import { formatSuiteCostLine, rollupSuiteTotals } from "../lib/ai-metrics.ts";
@@ -15,11 +16,12 @@ import { listForms } from "../lib/db.ts";
 import { normalizeQuestions } from "../lib/validate.ts";
 import { scoreAnswers } from "./ai-score.ts";
 
-if (!process.env.DEEPSEEK_API_KEY) {
-  throw new Error("DEEPSEEK_API_KEY required for npm run test:ai (opt-in live suite)");
+if (!process.env.MOONSHOT_API_KEY) {
+  throw new Error("MOONSHOT_API_KEY required for npm run test:ai (opt-in live suite)");
 }
 
 clearAiCallMetrics();
+const suiteStarted = Date.now();
 
 const form = listForms().find((f) => f.title === "Event Booking Request");
 assert.ok(form, "seeded Event Booking Request form exists");
@@ -135,6 +137,23 @@ test("restaurant PDF extract against fixture ground truth", async () => {
   assertRestaurantExtract("restaurant pdf", await extractAnswers(restaurantForm!, text.trim()));
 });
 
+test("restaurant DOCX extract against fixture ground truth", async () => {
+  const text = await extractFileText(
+    new Uint8Array(readFileSync("fixtures/restaurant-profile.docx")),
+    "restaurant-profile.docx"
+  );
+  assert.match(text, /Tavolino Rosso/i, "file-extract returns plain document text");
+  assertRestaurantExtract("restaurant docx", await extractAnswers(restaurantForm!, text.trim()));
+});
+
+test("restaurant image extract against fixture ground truth", async () => {
+  const b64 = readFileSync("fixtures/restaurant-profile.png").toString("base64");
+  assertRestaurantExtract(
+    "restaurant image",
+    await extractAnswers(restaurantForm!, { imageDataUrl: `data:image/png;base64,${b64}` })
+  );
+});
+
 test("restaurant chat asks for missing required email, then becomes ready", async () => {
   const text = readFileSync("fixtures/restaurant-profile.txt", "utf8");
   const fromTxt = await extractAnswers(restaurantForm!, text);
@@ -182,7 +201,8 @@ test.after(() => {
   const totals = rollupSuiteTotals(aiCallMetrics);
   const report = {
     generated_at: new Date().toISOString(),
-    model: "deepseek-v4-flash",
+    model: "kimi-k3",
+    suite_wall_clock_ms: Date.now() - suiteStarted,
     calls: aiCallMetrics,
     suite_totals: totals,
   };
@@ -195,4 +215,5 @@ test.after(() => {
     );
   }
   console.log(formatSuiteCostLine(totals));
+  console.log(`Suite wall clock: ${(report.suite_wall_clock_ms / 1000).toFixed(1)}s`);
 });

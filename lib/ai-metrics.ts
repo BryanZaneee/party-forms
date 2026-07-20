@@ -1,18 +1,13 @@
-/** DeepSeek V4 pricing (USD per 1M tokens). App + live tests use flash. */
-export const DEEPSEEK_PRICING = {
-  "deepseek-v4-flash": {
-    inputCacheHitPerM: 0.0028,
-    inputCacheMissPerM: 0.14,
-    outputPerM: 0.28,
-  },
-  "deepseek-v4-pro": {
-    inputCacheHitPerM: 0.003625,
-    inputCacheMissPerM: 0.435,
-    outputPerM: 0.87,
+/** Moonshot Kimi K3 pricing (USD per 1M tokens), flat across the 1M context. */
+export const AI_PRICING = {
+  "kimi-k3": {
+    inputCacheHitPerM: 0.3,
+    inputCacheMissPerM: 3.0,
+    outputPerM: 15.0,
   },
 } as const;
 
-export type DeepSeekModel = keyof typeof DEEPSEEK_PRICING;
+export type AiModel = keyof typeof AI_PRICING;
 
 export interface TokenUsage {
   prompt_tokens: number;
@@ -25,7 +20,7 @@ export interface TokenUsage {
 
 export interface CallMetrics {
   label: string;
-  model: DeepSeekModel;
+  model: AiModel;
   prompt_tokens: number;
   completion_tokens: number;
   total_tokens: number;
@@ -45,14 +40,16 @@ export interface SuiteTotals {
   suite_total_completion_tokens: number;
   suite_total_tokens: number;
   suite_total_cost_usd: number;
+  /** Sum of per-call latencies — model time, excludes test overhead. */
+  suite_total_latency_ms: number;
   ttft_ms_min: number | null;
   ttft_ms_avg: number | null;
   ttft_ms_max: number | null;
   tokens_per_second_avg: number | null;
 }
 
-export function costUsd(usage: TokenUsage, model: DeepSeekModel = "deepseek-v4-flash"): number {
-  const rates = DEEPSEEK_PRICING[model];
+export function costUsd(usage: TokenUsage, model: AiModel = "kimi-k3"): number {
+  const rates = AI_PRICING[model];
   let hit = usage.prompt_cache_hit_tokens;
   let miss = usage.prompt_cache_miss_tokens;
   if (hit === undefined || miss === undefined) {
@@ -68,12 +65,12 @@ export function costUsd(usage: TokenUsage, model: DeepSeekModel = "deepseek-v4-f
 
 export function buildCallMetrics(input: {
   label: string;
-  model?: DeepSeekModel;
+  model?: AiModel;
   usage: TokenUsage;
   latency_ms: number;
   ttft_ms?: number | null;
 }): CallMetrics {
-  const model = input.model ?? "deepseek-v4-flash";
+  const model = input.model ?? "kimi-k3";
   const usage = input.usage;
   const hit = usage.prompt_cache_hit_tokens ?? 0;
   const miss =
@@ -110,6 +107,7 @@ export function rollupSuiteTotals(calls: CallMetrics[]): SuiteTotals {
     suite_total_completion_tokens: calls.reduce((s, c) => s + c.completion_tokens, 0),
     suite_total_tokens: calls.reduce((s, c) => s + c.total_tokens, 0),
     suite_total_cost_usd: calls.reduce((s, c) => s + c.cost_usd, 0),
+    suite_total_latency_ms: calls.reduce((s, c) => s + c.latency_ms, 0),
     ttft_ms_min: ttfts.length ? Math.min(...ttfts) : null,
     ttft_ms_avg: ttfts.length ? ttfts.reduce((a, b) => a + b, 0) / ttfts.length : null,
     ttft_ms_max: ttfts.length ? Math.max(...ttfts) : null,
@@ -118,5 +116,5 @@ export function rollupSuiteTotals(calls: CallMetrics[]): SuiteTotals {
 }
 
 export function formatSuiteCostLine(totals: SuiteTotals): string {
-  return `Suite total cost: $${totals.suite_total_cost_usd.toFixed(6)} (${totals.suite_call_count} calls, ${totals.suite_total_tokens} tokens)`;
+  return `Suite total cost: $${totals.suite_total_cost_usd.toFixed(6)} (${totals.suite_call_count} calls, ${totals.suite_total_tokens} tokens, ${(totals.suite_total_latency_ms / 1000).toFixed(1)}s model time)`;
 }

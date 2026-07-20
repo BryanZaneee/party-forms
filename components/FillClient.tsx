@@ -509,10 +509,10 @@ export default function FillClient({ form }: { form: Form }) {
                 <span className="dashed" style={{ border: "1px dashed #b9c3d4", borderRadius: 7, padding: "5px 10px" }}>
                   📄 Upload a document
                 </span>
-                <span>Filler agent extracts answers (.pdf, .txt, .md)</span>
+                <span>Filler agent extracts answers (.pdf, .txt, .md, .docx, images)</span>
                 <input
                   type="file"
-                  accept=".pdf,.txt,.md"
+                  accept=".pdf,.txt,.md,.docx,.doc,.png,.jpg,.jpeg,.webp,.gif"
                   onChange={handleUpload}
                   disabled={aiBusy || revealing}
                   style={{ display: "none" }}

@@ -7,7 +7,7 @@ import {
   rollupSuiteTotals,
 } from "../lib/ai-metrics.ts";
 
-test("costUsd uses cache hit/miss and output rates for flash", () => {
+test("costUsd uses cache hit/miss and output rates for kimi-k3", () => {
   const cost = costUsd({
     prompt_tokens: 1_000_000,
     completion_tokens: 1_000_000,
@@ -15,8 +15,8 @@ test("costUsd uses cache hit/miss and output rates for flash", () => {
     prompt_cache_hit_tokens: 500_000,
     prompt_cache_miss_tokens: 500_000,
   });
-  // 0.5*0.0028 + 0.5*0.14 + 1*0.28 = 0.0014 + 0.07 + 0.28
-  assert.ok(Math.abs(cost - 0.3514) < 1e-9);
+  // 0.5*0.30 + 0.5*3.00 + 1*15.00 = 0.15 + 1.5 + 15
+  assert.ok(Math.abs(cost - 16.65) < 1e-9);
 });
 
 test("costUsd treats all prompt tokens as miss when cache split absent", () => {
@@ -25,7 +25,7 @@ test("costUsd treats all prompt tokens as miss when cache split absent", () => {
     completion_tokens: 0,
     total_tokens: 1_000_000,
   });
-  assert.equal(cost, 0.14);
+  assert.equal(cost, 3);
 });
 
 test("buildCallMetrics and suite rollup include total cost", () => {
@@ -52,6 +52,7 @@ test("buildCallMetrics and suite rollup include total cost", () => {
   const totals = rollupSuiteTotals([a, b]);
   assert.equal(totals.suite_call_count, 2);
   assert.equal(totals.suite_total_tokens, 3150);
+  assert.equal(totals.suite_total_latency_ms, 3000);
   assert.equal(totals.suite_total_cost_usd, a.cost_usd + b.cost_usd);
   assert.equal(totals.ttft_ms_min, 200);
   assert.equal(totals.ttft_ms_max, 400);

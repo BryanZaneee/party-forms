@@ -1,14 +1,14 @@
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import type { Answers, Form, Question } from "./types.ts";
 import { coerceAnswers, isAnswered, normalizeQuestions, validateAnswers } from "./validate.ts";
 import {
   buildCallMetrics,
+  type AiModel,
   type CallMetrics,
-  type DeepSeekModel,
   type TokenUsage,
 } from "./ai-metrics.ts";
 
-const MODEL: DeepSeekModel = "deepseek-v4-flash";
+const MODEL: AiModel = "kimi-k3";
 
 /** Accumulates per-call metrics for opt-in live AI tests. */
 export const aiCallMetrics: CallMetrics[] = [];
@@ -17,18 +17,18 @@ export function clearAiCallMetrics(): void {
   aiCallMetrics.length = 0;
 }
 
-// ponytail: thinking mode deliberately off — per-turn latency for no gain here.
+// K3 reasoning is always-on (max effort); temperature/top_p are fixed
+// server-side, and we keep only delta.content — reasoning_content is ignored.
 function client(): OpenAI {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) throw new Error("DEEPSEEK_API_KEY is not set — AI features are unavailable");
-  return new OpenAI({ apiKey, baseURL: "https://api.deepseek.com" });
+  const apiKey = process.env.MOONSHOT_API_KEY;
+  if (!apiKey) throw new Error("MOONSHOT_API_KEY is not set — AI features are unavailable");
+  return new OpenAI({ apiKey, baseURL: "https://api.moonshot.ai/v1" });
 }
 
 type ChatMessage = OpenAI.Chat.ChatCompletionMessageParam;
 
 async function streamCompletion(
   messages: ChatMessage[],
-  temperature: number,
   label: string
 ): Promise<{ raw: string; usage: TokenUsage; ttft_ms: number | null; latency_ms: number }> {
   const c = client();
@@ -40,7 +40,6 @@ async function streamCompletion(
   const stream = await c.chat.completions.create({
     model: MODEL,
     messages,
-    temperature,
     response_format: { type: "json_object" },
     stream: true,
     stream_options: { include_usage: true },
@@ -49,23 +48,19 @@ async function streamCompletion(
   for await (const chunk of stream) {
     const delta = chunk.choices[0]?.delta?.content;
     if (delta) {
+      // TTFT = first answer token; K3 streams reasoning before any content.
       if (ttft_ms === null) ttft_ms = Date.now() - started;
       raw += delta;
     }
     if (chunk.usage) {
-      const u = chunk.usage as TokenUsage & {
-        prompt_tokens: number;
-        completion_tokens: number;
-        total_tokens: number;
-        prompt_cache_hit_tokens?: number;
-        prompt_cache_miss_tokens?: number;
-      };
+      const cached = chunk.usage.prompt_tokens_details?.cached_tokens;
       usage = {
-        prompt_tokens: u.prompt_tokens,
-        completion_tokens: u.completion_tokens,
-        total_tokens: u.total_tokens,
-        prompt_cache_hit_tokens: u.prompt_cache_hit_tokens,
-        prompt_cache_miss_tokens: u.prompt_cache_miss_tokens,
+        prompt_tokens: chunk.usage.prompt_tokens,
+        completion_tokens: chunk.usage.completion_tokens,
+        total_tokens: chunk.usage.total_tokens,
+        prompt_cache_hit_tokens: cached,
+        prompt_cache_miss_tokens:
+          cached === undefined ? undefined : chunk.usage.prompt_tokens - cached,
       };
     }
   }
@@ -84,13 +79,12 @@ async function streamCompletion(
  */
 async function jsonCall<T>(
   messages: ChatMessage[],
-  temperature: number,
   check: (parsed: unknown) => T | null,
   label: string
 ): Promise<T> {
   let msgs = messages;
   for (let attempt = 0; attempt < 2; attempt++) {
-    const { raw } = await streamCompletion(msgs, temperature, `${label}${attempt ? `:retry` : ""}`);
+    const { raw } = await streamCompletion(msgs, `${label}${attempt ? `:retry` : ""}`);
     try {
       const value = check(JSON.parse(raw));
       if (value !== null) return value;
@@ -157,7 +151,6 @@ Respond with ONLY JSON:
 
   const result = await jsonCall(
     [{ role: "system", content: system }, ...history],
-    0.2,
     (parsed) => {
       const p = parsed as { reply?: unknown; answers?: unknown; ready_to_submit?: unknown };
       if (typeof p?.reply !== "string") return null;
@@ -177,12 +170,12 @@ Respond with ONLY JSON:
 }
 
 /**
- * Derive answers from document text. `missing` lists every question
- * (required or optional) the document did not answer.
+ * Derive answers from a document (text, or an image data URL for K3 vision).
+ * `missing` lists every question (required or optional) it did not answer.
  */
 export async function extractAnswers(
   form: Form,
-  text: string
+  source: string | { imageDataUrl: string }
 ): Promise<{ answers: Answers; missing: string[] }> {
   const system = `You extract form answers from a document. The form is "${form.title}".
 
@@ -196,12 +189,19 @@ Rules:
 
 Respond with ONLY JSON: {"answers": {question id: answer (checkbox values as arrays), for every question the document answers}}`;
 
+  const userMessage: ChatMessage =
+    typeof source === "string"
+      ? { role: "user", content: `Document:\n${source}` }
+      : {
+          role: "user",
+          content: [
+            { type: "text", text: "Document: the attached image." },
+            { type: "image_url", image_url: { url: source.imageDataUrl } },
+          ],
+        };
+
   const answers = await jsonCall(
-    [
-      { role: "system", content: system },
-      { role: "user", content: `Document:\n${text}` },
-    ],
-    0,
+    [{ role: "system", content: system }, userMessage],
     (parsed) => {
       const p = parsed as { answers?: unknown };
       if (!p || typeof p !== "object" || !("answers" in p)) return null;
@@ -233,7 +233,6 @@ Respond with ONLY JSON:
       { role: "system", content: system },
       { role: "user", content: description },
     ],
-    0,
     (parsed) => {
       const p = parsed as { title?: unknown; description?: unknown; questions?: unknown };
       if (typeof p?.title !== "string" || !p.title.trim()) return null;
@@ -294,7 +293,6 @@ Respond with ONLY JSON:
         ? [{ role: history[history.length - 1].role, content: history[history.length - 1].content + userExtra } as ChatMessage]
         : [{ role: "user" as const, content: `Start a form draft.${userExtra}` }]),
     ],
-    0.2,
     (parsed) => {
       const p = parsed as {
         reply?: unknown;
@@ -311,4 +309,22 @@ Respond with ONLY JSON:
     },
     "draftFormTurn"
   );
+}
+
+/**
+ * Extract text from a binary document (.docx/.doc) via Moonshot file-extract.
+ * Deletes the remote file after reading (per-user storage caps).
+ */
+export async function extractFileText(bytes: Uint8Array, filename: string): Promise<string> {
+  const c = client();
+  const uploaded = await c.files.create({
+    file: await toFile(bytes, filename),
+    // Moonshot-specific purpose; not in the SDK's closed FilePurpose union.
+    purpose: "file-extract" as unknown as OpenAI.FilePurpose,
+  });
+  try {
+    return await (await c.files.content(uploaded.id)).text();
+  } finally {
+    await c.files.delete(uploaded.id).catch(() => {});
+  }
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { draftFormTurn } from "@/lib/ai";
 import { normalizeQuestions } from "@/lib/validate";
-import { readUploadText } from "@/lib/upload";
+import { readUpload } from "@/lib/upload";
 import type { Question } from "@/lib/types";
 
 export async function POST(req: Request) {
@@ -38,9 +38,9 @@ export async function POST(req: Request) {
       }
       const file = form.get("file");
       if (file instanceof File && file.size > 0) {
-        const doc = await readUploadText(file);
+        const doc = await readUpload(file);
         if (!doc.ok) return NextResponse.json({ error: doc.error }, { status: doc.status });
-        documentText = doc.text;
+        if (doc.kind === "text") documentText = doc.text;
       }
     } else {
       const body = await req.json().catch(() => null);
