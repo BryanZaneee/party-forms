@@ -10,11 +10,11 @@ import {
   type TokenUsage,
 } from "./ai-metrics.ts";
 
-/** Default kimi-k3; override for A/B runs: AI_MODEL=claude-sonnet-5 npm run test:ai. */
+/** Default claude-sonnet-5; Kimi kept as alternates: AI_MODEL=kimi-k3 npm run test:ai. */
 export const AI_MODEL: AiModel =
   process.env.AI_MODEL && process.env.AI_MODEL in AI_PRICING
     ? (process.env.AI_MODEL as AiModel)
-    : "kimi-k3";
+    : "claude-sonnet-5";
 
 /** Accumulates per-call metrics for opt-in live AI tests. */
 export const aiCallMetrics: CallMetrics[] = [];

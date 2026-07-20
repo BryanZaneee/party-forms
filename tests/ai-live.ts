@@ -18,7 +18,10 @@ import { normalizeQuestions } from "../lib/validate.ts";
 import { scoreAnswers } from "./ai-score.ts";
 
 if (!process.env.MOONSHOT_API_KEY) {
-  throw new Error("MOONSHOT_API_KEY required for npm run test:ai (opt-in live suite)");
+  throw new Error("MOONSHOT_API_KEY required for npm run test:ai (docx file-extract + Kimi models)");
+}
+if (AI_MODEL.startsWith("claude-") && !process.env.ANTHROPIC_API_KEY) {
+  throw new Error("ANTHROPIC_API_KEY required for npm run test:ai on Claude models");
 }
 
 clearAiCallMetrics();

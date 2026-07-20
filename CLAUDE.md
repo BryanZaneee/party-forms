@@ -24,20 +24,21 @@ Explicitly out of scope: auth, user accounts, advanced config, visual polish
 - Single test file: `node --experimental-strip-types --test tests/validate.test.ts`
   (Node 22.6+ required; tests run TS directly via `--experimental-strip-types`)
 - `npm run test:e2e` — Playwright on port 3001 (builds prod, temp DB, blanks
-  `MOONSHOT_API_KEY` so AI routes 503 deterministically)
-- `npm run test:ai` — opt-in live Kimi K3 scorer + suite total cost
-  (`AI_MODEL=kimi-k2.6` or `AI_MODEL=claude-sonnet-5` runs the same suite
-  non-thinking for A/B comparisons; Claude needs `ANTHROPIC_API_KEY`)
+  the AI keys so routes 503 deterministically)
+- `npm run test:ai` — opt-in live Claude Sonnet 5 scorer + suite total
+  cost (`AI_MODEL=kimi-k3` / `kimi-k2.6` runs the same suite on the Kimi
+  alternates)
 - `npm run test:ai:e2e` — opt-in live AI Playwright (`AI_E2E=1`, `@ai` grep)
 - `npm run test:all` — all of the above in order
 
 ## Architecture
 
-Next.js 16 (App Router) + TypeScript, better-sqlite3, Moonshot Kimi K3
-(`kimi-k3`, OpenAI-compatible API at `api.moonshot.ai/v1`, `MOONSHOT_API_KEY`
-in `.env.local`). K3 reasoning is always-on (slower turns, output billed at
-$15/M). Without an API key everything works except AI features, which return
-a graceful 503.
+Next.js 16 (App Router) + TypeScript, better-sqlite3, Claude Sonnet 5
+(`claude-sonnet-5`, official Anthropic SDK, thinking disabled,
+`ANTHROPIC_API_KEY` in `.env.local`). Moonshot Kimi K3/K2.6 are kept as
+A/B alternates via `AI_MODEL` (OpenAI-compatible API, `MOONSHOT_API_KEY` —
+also used for .docx file-extract regardless of model). Without keys
+everything works except AI features, which return a graceful 503.
 
 ### Read/write contract
 
@@ -101,7 +102,7 @@ Everything lives under `tests/` (no separate e2e/api/ai folders):
 
 - `tests/*.test.ts` — deterministic unit/integration/regression (node:test)
 - `tests/smoke.spec.ts` — Playwright; live-AI cases tagged `@ai`
-- `tests/ai-live.ts` + `tests/ai-score.ts` — opt-in live Kimi K3 scorer
+- `tests/ai-live.ts` + `tests/ai-score.ts` — opt-in live AI scorer
   (never mocks model output; suite cost → `tests/last-run-metrics.json`)
 
 ## Commit messages

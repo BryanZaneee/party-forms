@@ -10,6 +10,8 @@ const dir = mkdtempSync(path.join(tmpdir(), "party-te-api-"));
 process.env.PARTY_TE_DB = path.join(dir, "api.db");
 const prevKey = process.env.MOONSHOT_API_KEY;
 delete process.env.MOONSHOT_API_KEY;
+const prevAnthropicKey = process.env.ANTHROPIC_API_KEY;
+delete process.env.ANTHROPIC_API_KEY;
 
 const {
   resetDbForTests,
@@ -26,6 +28,8 @@ test.after(() => {
   rmSync(dir, { recursive: true, force: true });
   if (prevKey !== undefined) process.env.MOONSHOT_API_KEY = prevKey;
   else delete process.env.MOONSHOT_API_KEY;
+  if (prevAnthropicKey !== undefined) process.env.ANTHROPIC_API_KEY = prevAnthropicKey;
+  else delete process.env.ANTHROPIC_API_KEY;
 });
 
 test("create form pipeline mirrors POST /api/forms", () => {
@@ -69,11 +73,11 @@ test("delete cascades like DELETE /api/forms/[id]", () => {
 test("AI helpers throw without API key (routes map to 503)", async () => {
   const { chatTurn, generateForm, draftFormTurn } = await import("../lib/ai.ts");
   const form = listForms()[0];
-  await assert.rejects(() => chatTurn(form, [{ role: "user", content: "hi" }], {}), /MOONSHOT_API_KEY/);
-  await assert.rejects(() => generateForm("RSVP"), /MOONSHOT_API_KEY/);
+  await assert.rejects(() => chatTurn(form, [{ role: "user", content: "hi" }], {}), /ANTHROPIC_API_KEY/);
+  await assert.rejects(() => generateForm("RSVP"), /ANTHROPIC_API_KEY/);
   await assert.rejects(
     () => draftFormTurn([{ role: "user", content: "hi" }], { title: "", description: "", questions: [] }),
-    /MOONSHOT_API_KEY/
+    /ANTHROPIC_API_KEY/
   );
 });
 

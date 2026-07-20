@@ -7,7 +7,7 @@
 - Share a fill link — respondents use traditional controls, a filler agent
   chat, or both, backed by one shared answers state
 - Upload a document (`.pdf`/`.txt`/`.md`/`.docx`) or an image (`.png`/`.jpg`/
-  `.webp`/`.gif`, read natively by Kimi K3 vision); the filler agent extracts answers
+  `.webp`/`.gif`, read natively by Claude vision); the filler agent extracts answers
   with a paper-shader reveal and reports what's still missing
 - Everything persists in a single SQLite file; no external services except
   the AI API
@@ -54,7 +54,7 @@ Requires Node.js 22.6+ (tests use `--experimental-strip-types`).
 
 ```bash
 npm install
-cp .env.example .env.local   # add your MOONSHOT_API_KEY
+cp .env.example .env.local   # add ANTHROPIC_API_KEY (+ MOONSHOT_API_KEY for docx)
 npm run dev                  # http://localhost:3000
 ```
 
@@ -74,19 +74,20 @@ first run).
   tests (no AI calls, `$0` cost)
 - `npm run test:e2e` — Playwright browser tests on port 3001 (AI routes
   stubbed or skipped; needs `npx playwright install chromium` once)
-- `npm run test:ai` — opt-in live Kimi K3 suite: extract/chat/generate/
+- `npm run test:ai` — opt-in live Claude Sonnet 5 suite: extract/chat/generate/
   creator draft against fixtures with a scorable rubric; prints TTFT,
   tokens/s, tokens, per-call cost, and **suite total cost** (needs
-  `MOONSHOT_API_KEY`, never mocks model output)
+  API keys, never mocks model output)
 - `npm run test:ai:e2e` — opt-in live AI Playwright (`AI_E2E=1`)
 - `npm run test:all` — `test` → `test:e2e` → `test:ai` → `test:ai:e2e`
 - `npm run lint` — ESLint
 
 ### Engineering notes
 
-- **Stack**: Next.js 16 (App Router) + TypeScript, better-sqlite3, Moonshot
-  Kimi K3 (`kimi-k3`) via the OpenAI-compatible API (JSON mode, native
-  vision, streaming for TTFT metrics, one validation retry).
+- **Stack**: Next.js 16 (App Router) + TypeScript, better-sqlite3, Claude
+  Sonnet 5 (`claude-sonnet-5`) via the Anthropic SDK (native vision,
+  streaming for TTFT metrics, one validation retry); Kimi K3/K2.6 kept as
+  `AI_MODEL` alternates via the OpenAI-compatible API.
 - **Dual agents**: creator agent on `/new` (`POST /api/forms/draft`, chat +
   brief upload) drafts the schema; filler agent on `/fill/[id]` chats and
   extracts from documents, with a paper-shader stagger reveal into fields.
