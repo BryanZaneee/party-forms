@@ -3,12 +3,14 @@ import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { normalizeQuestions } from "../lib/validate.ts";
 
 const dir = mkdtempSync(path.join(tmpdir(), "party-te-db-"));
 const dbPath = path.join(dir, "test.db");
 process.env.PARTY_TE_DB = dbPath;
 
 const {
+  RESTAURANT_SEED_QUESTIONS,
   SEED_QUESTIONS,
   createForm,
   createSubmission,
@@ -24,15 +26,25 @@ test.after(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-test("empty DB seeds Event Booking Request", () => {
+test("empty DB seeds both sample forms", () => {
   const forms = listForms();
-  assert.equal(forms.length, 1);
-  assert.equal(forms[0].title, "Event Booking Request");
+  assert.equal(forms.length, 2);
+  const event = forms.find((f) => f.title === "Event Booking Request");
+  assert.ok(event);
   assert.deepEqual(
-    forms[0].questions.map((q) => q.id),
+    event.questions.map((q) => q.id),
     SEED_QUESTIONS.map((q) => q.id)
   );
-  assert.equal(forms[0].submission_count, 0);
+  assert.equal(event.submission_count, 0);
+  const venue = forms.find((f) => f.title === "Restaurant Venue Profile");
+  assert.ok(venue);
+  assert.deepEqual(venue.questions, RESTAURANT_SEED_QUESTIONS);
+  assert.equal(venue.submission_count, 0);
+});
+
+test("restaurant seed covers all 7 types and normalizes cleanly", () => {
+  assert.equal(new Set(RESTAURANT_SEED_QUESTIONS.map((q) => q.type)).size, 7);
+  assert.deepEqual(normalizeQuestions(RESTAURANT_SEED_QUESTIONS), RESTAURANT_SEED_QUESTIONS);
 });
 
 test("create, submit, list, and cascade delete", () => {

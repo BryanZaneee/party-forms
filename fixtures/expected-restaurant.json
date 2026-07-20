@@ -1,0 +1,15 @@
+{
+  "answers": {
+    "q1": "Tavolino Rosso",
+    "q2": "Italian",
+    "q3": "482 Crestline Avenue",
+    "q4": "70",
+    "q6": "Upscale",
+    "q7": "Full bar",
+    "q8": ["Private dining room", "Outdoor patio", "Wheelchair accessible", "Projector and sound system"],
+    "q9": "4",
+    "q10": "2026-03-14"
+  },
+  "missing": ["q5", "q11", "q12"],
+  "notes": "9 scored fields; accuracy >= 0.8 tolerates one miss (hedge for q8 set-equality / q10 date exactness). Hard-assert q2 and q7 exact, q11 + q5 missing. q12 missing is soft: models sometimes put flavor prose in the notes textarea."
+}

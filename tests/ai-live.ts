@@ -98,6 +98,86 @@ test("partial document leaves most fields missing", async () => {
   if (extracted.answers.q4) assert.equal(extracted.answers.q4, "Vegan");
 });
 
+const restaurantForm = listForms().find((f) => f.title === "Restaurant Venue Profile");
+assert.ok(restaurantForm, "seeded Restaurant Venue Profile form exists");
+
+const restaurantExpected = JSON.parse(readFileSync("fixtures/expected-restaurant.json", "utf8")) as {
+  answers: Record<string, string | string[]>;
+  missing: string[];
+};
+
+function assertRestaurantExtract(label: string, extracted: Awaited<ReturnType<typeof extractAnswers>>) {
+  console.log(`${label}:`, JSON.stringify(extracted, null, 2));
+  const { accuracy, details } = scoreAnswers(
+    restaurantForm!.questions,
+    restaurantExpected.answers,
+    extracted.answers
+  );
+  console.log(`${label} scorecard:`, details, `accuracy=${accuracy.toFixed(2)}`);
+  assert.ok(accuracy >= 0.8, `${label}: field accuracy ${accuracy} < 0.8`);
+  assert.equal(extracted.answers.q2, "Italian", `${label}: cuisine exact`);
+  assert.equal(extracted.answers.q7, "Full bar", `${label}: alcohol service exact`);
+  assert.ok(extracted.missing.includes("q11"), `${label}: contact email (required) missing`);
+  assert.ok(extracted.missing.includes("q5"), `${label}: table count (optional) missing`);
+}
+
+test("restaurant TXT extract against fixture ground truth", async () => {
+  const text = readFileSync("fixtures/restaurant-profile.txt", "utf8");
+  assertRestaurantExtract("restaurant txt", await extractAnswers(restaurantForm!, text));
+});
+
+test("restaurant PDF extract against fixture ground truth", async () => {
+  const pdfBytes = new Uint8Array(readFileSync("fixtures/restaurant-profile.pdf"));
+  const { extractText, getDocumentProxy } = await import("unpdf");
+  const pdf = await getDocumentProxy(pdfBytes);
+  const { text } = await extractText(pdf, { mergePages: true });
+  assert.ok(text.trim().length > 0);
+  assertRestaurantExtract("restaurant pdf", await extractAnswers(restaurantForm!, text.trim()));
+});
+
+test("restaurant chat asks for missing required email, then becomes ready", async () => {
+  const text = readFileSync("fixtures/restaurant-profile.txt", "utf8");
+  const fromTxt = await extractAnswers(restaurantForm!, text);
+  assert.ok(fromTxt.missing.includes("q11"), "extract leaves contact email missing");
+
+  const ask = "I've uploaded our venue profile - is anything still needed before we submit?";
+  const turn1 = await chatTurn(restaurantForm!, [{ role: "user", content: ask }], fromTxt.answers);
+  console.log("restaurant chat turn 1:", turn1.reply);
+  assert.equal(turn1.ready_to_submit, false, "not ready while required contact email is missing");
+
+  const supply =
+    "Our contact email is events@tavolinorosso.com. That is everything - please summarize so I can submit.";
+  const turn2 = await chatTurn(
+    restaurantForm!,
+    [
+      { role: "user", content: ask },
+      { role: "assistant", content: turn1.reply },
+      { role: "user", content: supply },
+    ],
+    turn1.answers
+  );
+  console.log("restaurant chat turn 2:", turn2.reply);
+  assert.equal(turn2.answers.q11, "events@tavolinorosso.com");
+  assert.equal(turn2.answers.q7, "Full bar", "earlier extracted answers preserved");
+
+  // The model may hold ready_to_submit until the user confirms its summary.
+  const confirm = "Yes, everything is correct.";
+  const turn3 = await chatTurn(
+    restaurantForm!,
+    [
+      { role: "user", content: ask },
+      { role: "assistant", content: turn1.reply },
+      { role: "user", content: supply },
+      { role: "assistant", content: turn2.reply },
+      { role: "user", content: confirm },
+    ],
+    turn2.answers
+  );
+  console.log("restaurant chat turn 3:", turn3.reply);
+  assert.equal(turn3.answers.q11, "events@tavolinorosso.com", "email survives confirmation turn");
+  assert.equal(turn3.ready_to_submit, true, "ready once required email supplied and summary confirmed");
+});
+
 test.after(() => {
   const totals = rollupSuiteTotals(aiCallMetrics);
   const report = {

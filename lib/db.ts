@@ -19,6 +19,22 @@ export const SEED_QUESTIONS: Question[] = [
   { id: "q6", label: "How did you hear about us?", type: "multiple_choice", options: ["Friend", "Social media", "Search", "Other"], required: false },
 ];
 
+/** Second seed: detailed venue profile; exercises all 7 question types. */
+export const RESTAURANT_SEED_QUESTIONS: Question[] = [
+  { id: "q1", label: "Restaurant name", type: "text", required: true },
+  { id: "q2", label: "Cuisine type", type: "dropdown", options: ["Italian", "Mexican", "Japanese", "American", "Mediterranean", "Other"], required: true },
+  { id: "q3", label: "Street address", type: "text", required: true },
+  { id: "q4", label: "Seated guest capacity", type: "text", required: true },
+  { id: "q5", label: "Number of tables", type: "text", required: false },
+  { id: "q6", label: "Price range", type: "dropdown", options: ["Budget", "Moderate", "Upscale", "Fine dining"], required: true },
+  { id: "q7", label: "Alcohol service", type: "multiple_choice", options: ["Full bar", "Beer and wine only", "BYOB", "No alcohol service"], required: true },
+  { id: "q8", label: "Amenities", type: "checkbox", options: ["Private dining room", "Outdoor patio", "Wheelchair accessible", "On-site parking", "Projector and sound system", "Live music"], required: true },
+  { id: "q9", label: "Private-event experience (1 = first event, 5 = seasoned)", type: "rating", max: 5, required: false },
+  { id: "q10", label: "Earliest availability date", type: "date", required: true },
+  { id: "q11", label: "Contact email", type: "text", required: true },
+  { id: "q12", label: "Anything else we should know?", type: "textarea", required: false },
+];
+
 function resolveDbPath(): string {
   return process.env.PARTY_TE_DB ?? path.join(process.cwd(), "var", "data.db");
 }
@@ -60,12 +76,25 @@ function initSchema(database: Database.Database): void {
     database.exec("ALTER TABLE submissions ADD COLUMN via TEXT NOT NULL DEFAULT 'form'");
   }
 
-  if ((database.prepare("SELECT COUNT(*) AS n FROM forms").get() as { n: number }).n === 0) {
-    database.prepare("INSERT INTO forms (id, title, description, questions) VALUES (?, ?, ?, ?)").run(
+  // Seed per-title (not only-when-empty) so fixture forms appear in existing
+  // dev DBs too; a deleted seed form resurrects on next start — acceptable
+  // for demo/fixture data.
+  const insert = database.prepare("INSERT INTO forms (id, title, description, questions) VALUES (?, ?, ?, ?)");
+  const has = database.prepare("SELECT 1 FROM forms WHERE title = ?");
+  if (!has.get("Event Booking Request")) {
+    insert.run(
       randomUUID(),
       "Event Booking Request",
       "Tell us about your event so we can prepare a booking.",
       JSON.stringify(SEED_QUESTIONS)
+    );
+  }
+  if (!has.get("Restaurant Venue Profile")) {
+    insert.run(
+      randomUUID(),
+      "Restaurant Venue Profile",
+      "Tell us about your restaurant so we can match you with private-event bookings.",
+      JSON.stringify(RESTAURANT_SEED_QUESTIONS)
     );
   }
 }

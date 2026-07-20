@@ -1,8 +1,16 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
-test("dashboard lists seeded form", async ({ page }) => {
+// Two forms are seeded; navigate by title instead of clicking the first card.
+async function openEventFill(page: Page) {
+  await page.goto("/");
+  const href = await page.getByRole("link", { name: "Event Booking Request" }).getAttribute("href");
+  await page.goto(href!.replace("/forms/", "/fill/"));
+}
+
+test("dashboard lists seeded forms", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Event Booking Request")).toBeVisible();
+  await expect(page.getByText("Restaurant Venue Profile")).toBeVisible();
 });
 
 test("builder shows creator agent panel", async ({ page }) => {
@@ -12,8 +20,7 @@ test("builder shows creator agent panel", async ({ page }) => {
 });
 
 test("traditional fill submit works", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("link", { name: /Fill/i }).first().click();
+  await openEventFill(page);
   await expect(page.getByText("Filler agent", { exact: true })).toBeVisible();
 
   await page.getByPlaceholder("Your answer").first().fill("Ada Lovelace");
@@ -26,8 +33,7 @@ test("traditional fill submit works", async ({ page }) => {
 });
 
 test("filler extract UI can show paper-shader reveal @ui", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("link", { name: /Fill/i }).first().click();
+  await openEventFill(page);
   await expect(page.getByText("Filler agent", { exact: true })).toBeVisible();
 
   await page.route("**/api/forms/*/extract", async (route) => {
@@ -51,8 +57,7 @@ test("filler extract UI can show paper-shader reveal @ui", async ({ page }) => {
 
 test("live AI extract fills vegan meal @ai", async ({ page }) => {
   test.skip(!process.env.AI_E2E, "Set AI_E2E=1 for live AI e2e");
-  await page.goto("/");
-  await page.getByRole("link", { name: /Fill/i }).first().click();
+  await openEventFill(page);
   await page.locator('input[type="file"]').setInputFiles("fixtures/sample-document.txt");
   await expect(page.getByTestId("extract-reveal")).toBeVisible({ timeout: 15000 });
   await expect(page.locator("select").first()).toHaveValue("Vegan", { timeout: 60000 });
