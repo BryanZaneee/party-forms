@@ -155,8 +155,8 @@ export default function FillClient({ form }: { form: Form }) {
       merged = { ...base, ...extracted };
       setAnswers(merged);
       setMissing((m) => m.filter((id) => !isAnswered(merged[id])));
-      // Let the last field's highlight land before the overlay fades out.
-      if (order.length > 0 && !revealCancel.current) await new Promise((r) => setTimeout(r, 320));
+      // Hold on "I've looked through it all!" before the overlay fades out.
+      if (order.length > 0 && !revealCancel.current) await new Promise((r) => setTimeout(r, 1100));
       setRevealing(false);
       setFlashIds([]);
       const check = validateAnswers(form.questions, merged);
@@ -187,6 +187,29 @@ export default function FillClient({ form }: { form: Form }) {
   };
 
   const answeredCount = form.questions.filter((q) => isAnswered(answers[q.id])).length;
+
+  const pills = form.questions.map((q) => {
+    const done = isAnswered(answers[q.id]);
+    const label = q.label.length > 22 ? q.label.slice(0, 21) + "…" : q.label;
+    return (
+      <div
+        key={q.id}
+        style={{
+          fontSize: 11.5,
+          fontWeight: 600,
+          padding: "4px 9px",
+          borderRadius: 99,
+          background: done ? "var(--accent-soft)" : "#f3f5f9",
+          color: done ? "var(--accent)" : "#7a8699",
+          border: `1px solid ${done ? "var(--accent)" : "#e2e7f0"}`,
+          transition: "background .25s ease, color .25s ease, border-color .25s ease",
+        }}
+      >
+        {done ? "✓" : "○"} {label}
+        {q.required ? " *" : ""}
+      </div>
+    );
+  });
 
   return (
     <div style={{ minHeight: "100vh" }}>
@@ -350,61 +373,26 @@ export default function FillClient({ form }: { form: Form }) {
                 active={revealing}
                 label={
                   revealProgress.total > 0
-                    ? `Reading your document… ${revealProgress.placed} of ${revealProgress.total} answers placed`
+                    ? revealProgress.placed === revealProgress.total
+                      ? "I've looked through it all!"
+                      : `Reading your document… ${revealProgress.placed} of ${revealProgress.total} answers placed`
                     : undefined
                 }
-              />
+              >
+                {pills}
+              </ExtractReveal>
               <div
                 ref={chatScroll}
                 style={{
                   height: 380,
                   overflowY: "auto",
-                  padding: "0 18px 16px",
+                  padding: "14px 18px 16px",
                   display: "flex",
                   flexDirection: "column",
                   gap: 10,
                   background: "#f8fafd",
                 }}
               >
-                {/* Sticky checklist inside the chat window; floats above the reveal shader. */}
-                <div
-                  style={{
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 6,
-                    margin: "0 -18px",
-                    padding: "10px 16px",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 6,
-                    background: "rgba(248,250,253,.95)",
-                    borderBottom: "1px solid #edf0f6",
-                    backdropFilter: "blur(2px)",
-                  }}
-                >
-                  {form.questions.map((q) => {
-                    const done = isAnswered(answers[q.id]);
-                    const label = q.label.length > 22 ? q.label.slice(0, 21) + "…" : q.label;
-                    return (
-                      <div
-                        key={q.id}
-                        style={{
-                          fontSize: 11.5,
-                          fontWeight: 600,
-                          padding: "4px 9px",
-                          borderRadius: 99,
-                          background: done ? "var(--accent-soft)" : "#f3f5f9",
-                          color: done ? "var(--accent)" : "#7a8699",
-                          border: `1px solid ${done ? "var(--accent)" : "#e2e7f0"}`,
-                          transition: "background .25s ease, color .25s ease, border-color .25s ease",
-                        }}
-                      >
-                        {done ? "✓" : "○"} {label}
-                        {q.required ? " *" : ""}
-                      </div>
-                    );
-                  })}
-                </div>
                 {chat.map((m, i) => (
                 <div
                   key={i}
@@ -433,6 +421,22 @@ export default function FillClient({ form }: { form: Form }) {
               )}
               </div>
             </div>
+            {/* ponytail: native <details> = free minimize, no state */}
+            <details open style={{ borderTop: "1px solid #edf0f6" }}>
+              <summary
+                style={{
+                  padding: "10px 16px",
+                  fontSize: 12.5,
+                  fontWeight: 600,
+                  color: "#5c6b82",
+                  cursor: "pointer",
+                  userSelect: "none",
+                }}
+              >
+                Question checklist · {answeredCount} of {form.questions.length} answered
+              </summary>
+              <div style={{ padding: "2px 16px 12px", display: "flex", flexWrap: "wrap", gap: 6 }}>{pills}</div>
+            </details>
             {aiReady && validateAnswers(form.questions, answers).missing.length === 0 && (
               <div
                 style={{

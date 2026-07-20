@@ -12,7 +12,15 @@ declare module "react" {
 }
 
 /** Paper-shader overlay shown while extracted answers stagger into the form. */
-export default function ExtractReveal({ active, label }: { active: boolean; label?: string }) {
+export default function ExtractReveal({
+  active,
+  label,
+  children,
+}: {
+  active: boolean;
+  label?: string;
+  children?: React.ReactNode;
+}) {
   useEffect(() => {
     if (active) void import("./paper-shader.js");
   }, [active]);
@@ -38,7 +46,7 @@ export default function ExtractReveal({ active, label }: { active: boolean; labe
       <paper-shader
         style={{ position: "absolute", inset: 0, opacity: 0.92 }}
         color-back="#070d1a"
-        color-front="#e11d74"
+        color-front="#2563eb"
         shape="ripple"
         type="8x8"
         px-size="2.2"
@@ -78,6 +86,24 @@ export default function ExtractReveal({ active, label }: { active: boolean; labe
         </span>
         <span>{label ?? "Placing answers from your document…"}</span>
       </div>
+      {children && (
+        <div
+          style={{
+            position: "relative",
+            marginTop: 14,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 6,
+            justifyContent: "center",
+            maxWidth: "88%",
+            maxHeight: "55%",
+            overflow: "hidden",
+            animation: "chip-rise .35s .1s ease both",
+          }}
+        >
+          {children}
+        </div>
+      )}
     </div>
   );
 }
