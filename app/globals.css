@@ -97,3 +97,11 @@ select:focus {
 .opt-x:hover {
   color: #c0392b !important;
 }
+
+/* Reveal overlay pill list scrolls programmatically; hide the bar. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

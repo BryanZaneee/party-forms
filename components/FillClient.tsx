@@ -371,6 +371,7 @@ export default function FillClient({ form }: { form: Form }) {
             <div style={{ position: "relative" }}>
               <ExtractReveal
                 active={revealing}
+                progress={revealProgress}
                 label={
                   revealProgress.total > 0
                     ? revealProgress.placed === revealProgress.total

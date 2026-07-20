@@ -33,11 +33,13 @@ The UI uses plain inline CSS (no Tailwind).
 - `/` — dashboard: form cards with fill/responses links, copy-share-link and
   delete, plus New form.
 - `/new` — builder: seven question types with drag reorder, plus a
-  "Draft with AI" panel that prefills rows from chat or a brief upload.
+  "Draft with AI" panel that staggers drafted rows in with an animated
+  reveal, from chat or a brief upload.
 - `/fill/[id]` — shareable respondent link. Traditional controls on the left;
-  sticky AI assistant on the right (status chips, chat, document upload).
-  Both sides share one answers state. The AI shows a Ready-to-submit card —
-  the respondent always clicks submit.
+  sticky AI assistant on the right (chat, document upload, and a minimizable
+  question checklist whose pills tick off live during extraction). Both sides
+  share one answers state. The AI shows a Ready-to-submit card — the
+  respondent always clicks submit.
 - `/forms/[id]` — responses table with click-to-open detail.
 
 Three sample forms are seeded on first run: **Event Booking Request**,
@@ -74,7 +76,8 @@ first run).
 - `npm run dev` — Turbopack dev server
 - `npm run build` / `npm start` — production build and serve
 - `npm test` — deterministic unit/API/regression tests (no AI calls)
-- `npm run test:e2e` — Playwright on port 3001 (AI routes stubbed; needs
+- `npm run test:e2e` — Playwright on port 3001 (AI keys blanked so AI routes
+  503 deterministically; needs
   `npx playwright install chromium` once)
 - `npm run test:ai` — opt-in live Claude Sonnet 5 suite with cost rollup
   (`AI_MODEL=kimi-k3` / `kimi-k2.6` for Kimi alternates; needs API keys)

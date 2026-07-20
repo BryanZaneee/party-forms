@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 declare module "react" {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- JSX intrinsics can only be augmented via a namespace
@@ -15,15 +15,28 @@ declare module "react" {
 export default function ExtractReveal({
   active,
   label,
+  progress,
   children,
 }: {
   active: boolean;
   label?: string;
+  progress?: { placed: number; total: number };
   children?: React.ReactNode;
 }) {
+  const pillScroll = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (active) void import("./paper-shader.js");
   }, [active]);
+
+  // Follow the pill currently being filled so long lists scroll past instead of clipping.
+  useEffect(() => {
+    const el = pillScroll.current;
+    const current = el?.children[(progress?.placed ?? 0) - 1] as HTMLElement | undefined;
+    if (el && current) {
+      el.scrollTo({ top: current.offsetTop - el.clientHeight / 2, behavior: "smooth" });
+    }
+  }, [progress?.placed]);
 
   if (!active) return null;
 
@@ -88,6 +101,8 @@ export default function ExtractReveal({
       </div>
       {children && (
         <div
+          ref={pillScroll}
+          className="no-scrollbar"
           style={{
             position: "relative",
             marginTop: 14,
@@ -97,7 +112,7 @@ export default function ExtractReveal({
             justifyContent: "center",
             maxWidth: "88%",
             maxHeight: "55%",
-            overflow: "hidden",
+            overflowY: "auto",
             animation: "chip-rise .35s .1s ease both",
           }}
         >

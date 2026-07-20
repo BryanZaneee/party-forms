@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Question, QuestionType } from "@/lib/types";
+import ExtractReveal from "./ExtractReveal";
 
 export interface DraftQ {
   key: string;
@@ -37,6 +38,9 @@ export default function CreatorAgentPanel({
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [revealing, setRevealing] = useState(false);
+  const [revealProgress, setRevealProgress] = useState<{ placed: number; total: number }>({ placed: 0, total: 0 });
+  const [revealQs, setRevealQs] = useState<DraftQ[]>([]);
   const scroll = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,24 +59,37 @@ export default function CreatorAgentPanel({
         required: q.required,
       }));
 
-  const applyBody = (body: {
+  const applyBody = async (body: {
     reply: string;
     title: string;
     description: string;
     questions: Question[];
   }) => {
-    onApplyDraft({
-      title: body.title,
-      description: body.description,
-      questions: body.questions.map((q) => ({
-        key: crypto.randomUUID(),
-        label: q.label,
-        type: q.type,
-        options: q.options ?? [],
-        max: q.max,
-        required: q.required,
-      })),
-    });
+    const draft: DraftQ[] = body.questions.map((q) => ({
+      key: crypto.randomUUID(),
+      label: q.label,
+      type: q.type,
+      options: q.options ?? [],
+      max: q.max,
+      required: q.required,
+    }));
+    const total = draft.length;
+    const apply = (qs: DraftQ[]) =>
+      onApplyDraft({ title: body.title, description: body.description, questions: qs });
+    setRevealQs(draft);
+    setRevealProgress({ placed: 0, total });
+    setRevealing(total > 0);
+    apply([]);
+    // ponytail: fixed cadence, faster for big drafts so 100+ questions land in ~9s
+    const delay = total > 20 ? 80 : 240;
+    for (let i = 1; i <= total; i++) {
+      await new Promise((r) => setTimeout(r, delay));
+      apply(draft.slice(0, i));
+      setRevealProgress({ placed: i, total });
+    }
+    // Hold on "I've drafted it all!" before the overlay fades out.
+    if (total > 0) await new Promise((r) => setTimeout(r, 1100));
+    setRevealing(false);
     setChat((c) => [...c, { role: "assistant", text: body.reply }]);
   };
 
@@ -117,7 +134,7 @@ export default function CreatorAgentPanel({
       }
       const body = await res.json();
       if (!res.ok) throw new Error(body?.error ?? "Draft failed");
-      applyBody(body);
+      await applyBody(body);
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : "Creator agent unavailable");
       setChat((c) => [
@@ -155,23 +172,60 @@ export default function CreatorAgentPanel({
           }}
         />
         <div style={{ fontSize: 14, fontWeight: 600 }}>Creator agent</div>
-        <div style={{ fontSize: 12, color: "#7a8699" }}>{busy ? "drafting…" : "drafts the form"}</div>
+        <div style={{ fontSize: 12, color: "#7a8699" }}>
+          {revealing ? "placing questions…" : busy ? "drafting…" : "drafts the form"}
+        </div>
       </div>
       <div style={{ fontSize: 12.5, color: "#5c6b82", lineHeight: 1.45, padding: "10px 16px", borderBottom: "1px solid #edf0f6" }}>
         Chat to build or refine the schema, or upload a brief. You review and edit every row before saving.
       </div>
-      <div
-        ref={scroll}
-        style={{
-          height: 280,
-          overflowY: "auto",
-          padding: "14px 16px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          background: "#f8fafd",
-        }}
-      >
+      <div style={{ position: "relative" }}>
+        <ExtractReveal
+          active={revealing}
+          progress={revealProgress}
+          label={
+            revealProgress.total > 0
+              ? revealProgress.placed === revealProgress.total
+                ? "I've drafted it all!"
+                : `Drafting your form… ${revealProgress.placed} of ${revealProgress.total} questions placed`
+              : undefined
+          }
+        >
+          {revealQs.map((q, i) => {
+            const done = i < revealProgress.placed;
+            const label = q.label.length > 22 ? q.label.slice(0, 21) + "…" : q.label;
+            return (
+              <div
+                key={q.key}
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  padding: "4px 9px",
+                  borderRadius: 99,
+                  background: done ? "var(--accent-soft)" : "#f3f5f9",
+                  color: done ? "var(--accent)" : "#7a8699",
+                  border: `1px solid ${done ? "var(--accent)" : "#e2e7f0"}`,
+                  transition: "background .25s ease, color .25s ease, border-color .25s ease",
+                }}
+              >
+                {done ? "✓" : "○"} {label}
+                {q.required ? " *" : ""}
+              </div>
+            );
+          })}
+        </ExtractReveal>
+        <div
+          ref={scroll}
+          style={{
+            height: 280,
+            overflowY: "auto",
+            padding: "14px 16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            background: "#f8fafd",
+          }}
+        >
         {chat.map((m, i) => (
           <div
             key={i}
@@ -198,6 +252,7 @@ export default function CreatorAgentPanel({
             <span style={{ animation: "blink 1.2s .4s infinite" }}>●</span>
           </div>
         )}
+        </div>
       </div>
       <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
         <textarea
