@@ -1,6 +1,9 @@
-# 📦 Party Forms
+# Party Forms
 
-## 🌟 Highlights
+An AI form builder where two agents share the work: one drafts the form,
+the other fills it in from a conversation or an uploaded document.
+
+## Highlights
 
 - Build forms on a dashboard with seven question types, drag reorder, and a
   creator agent that drafts or refines the schema from chat or a brief
@@ -14,21 +17,23 @@
 - AI output is never trusted: answers are validated and coerced against the
   form definition on both client and server
 
-## ℹ️ Overview
+## Overview
 
-Party Forms is an AI-powered form builder built as a take-home assignment
-(~2–3 hour scope). Creators get a dashboard to build forms and review
+Party Forms is an AI-powered form builder with two agents on opposite ends of
+the same schema. The creator agent drafts and refines a form from a chat or an
+uploaded brief; the filler agent reads a respondent's document or conversation
+and extracts answers into it. Creators get a dashboard to build forms and review
 responses; respondents get a shareable link where they answer with familiar
 controls or chat with an AI assistant that extracts answers, tracks what's
 missing, and shows a summary before submission — it never submits on its own.
 
 The UI uses plain inline CSS (no Tailwind).
 
-## ✍️ Authors
+## Author
 
 [Bryan Zane](https://github.com/BryanZaneee).
 
-## 🚀 Usage
+## Usage
 
 - `/` — dashboard: form cards with fill/responses links, copy-share-link and
   delete, plus New form.
@@ -54,7 +59,7 @@ the `/new` Draft-with-AI panel. For the stress demo, drop
 `BIG-restaurant-onboarding-packet.pdf` on its fill page — 110 answers land and
 the agent asks for the 4 that are deliberately missing.
 
-## ⬇️ Installation
+## Installation
 
 Requires Node.js 22.6+ (tests use `--experimental-strip-types`).
 
@@ -98,8 +103,19 @@ first run).
   re-gated server-side on actual required completeness.
 - Live AI metrics land in `tests/last-run-metrics.json` (gitignored).
 
-## 💭 Feedback and Contributing
+## Contributing
 
-This is a take-home assignment, so there's no formal contribution process —
-questions and feedback are welcome as
-[GitHub issues](https://github.com/BryanZaneee/party-TE/issues).
+Pull requests are welcome. For anything larger than a fix, open an issue first
+so the change can be discussed. Run `npm test` and `npm run lint` before
+opening one, and add or update tests for any behavioral change. `npm run
+test:e2e` needs `npx playwright install chromium` once. Do not run
+`npm run test:ai` in CI; it makes live API calls and costs money.
+
+Never commit `.env.local`, `var/data.db`, or `tests/last-run-metrics.json`.
+
+Questions and feedback are welcome as
+[GitHub issues](https://github.com/BryanZaneee/party-forms/issues).
+
+## License
+
+[MIT](LICENSE)
